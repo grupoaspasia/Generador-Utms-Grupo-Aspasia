@@ -1,0 +1,1515 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Generador de UTMs — Grupo Aspasia</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2064%2064%22%3E%0A%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2214%22%20fill%3D%22%23001E46%22/%3E%0A%3Ccircle%20cx%3D%2248%22%20cy%3D%2216%22%20r%3D%225%22%20fill%3D%22%23FFD900%22/%3E%0A%3Ctext%20x%3D%2232%22%20y%3D%2242%22%20font-family%3D%22Arial%2C%20Helvetica%2C%20sans-serif%22%20font-size%3D%2226%22%20font-weight%3D%22800%22%20fill%3D%22%23FFFFFF%22%20text-anchor%3D%22middle%22%3EGA%3C/text%3E%0A%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root{
+    --bg:#EFF4FF;
+    --card:#FFFFFF;
+    --ink:#15171A;
+    --ink-soft:#3A4150;
+    --line:#E6EBF2;
+    --accent:#006AE4;
+    --accent-dark:#0056BD;
+    --accent-soft:#E5F0FC;
+    --marino:#001E46;
+    --amarillo:#FFD900;
+    --ok:#1A9E6C;
+    --ok-soft:#E7F7F1;
+    --warn:#C97A0A;
+    --warn-soft:#FCEFDD;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Figtree',sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{ max-width:1200px; margin:0 auto; padding:32px 24px 64px; }
+  .brandbar{
+    background:var(--marino);
+    margin:-32px -24px 28px;
+    padding:20px 24px 22px;
+    display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;
+  }
+  .brandbar .wordmark{
+    font-family:'Figtree',sans-serif; font-weight:800; font-size:15px;
+    color:#fff; letter-spacing:.04em; text-transform:uppercase;
+    display:flex; align-items:center; gap:8px;
+  }
+  .brandbar .wordmark .dot{
+    width:8px; height:8px; border-radius:50%; background:var(--amarillo); display:inline-block;
+  }
+  header.top{
+    display:flex; align-items:baseline; justify-content:space-between;
+    gap:16px; margin-bottom:28px; flex-wrap:wrap;
+  }
+  header.top h1{
+    font-family:'Figtree',sans-serif; font-size:26px; font-weight:800;
+    margin:0; letter-spacing:-0.01em; display:inline-block;
+    border-bottom:4px solid var(--amarillo); padding-bottom:2px;
+  }
+  header.top p{ margin:10px 0 0; color:var(--ink-soft); font-size:14px; }
+  .badge{
+    font-family:'IBM Plex Mono',monospace; font-size:11px;
+    background:var(--accent-soft); color:var(--accent-dark);
+    padding:5px 10px; border-radius:20px; white-space:nowrap;
+  }
+  .layout{ display:grid; grid-template-columns:1.35fr 1fr; gap:24px; align-items:flex-start; }
+  @media (max-width:920px){ .layout{grid-template-columns:1fr;} }
+  .card{ background:var(--card); border:1px solid var(--line); border-radius:14px; padding:22px 24px; margin-bottom:20px; }
+  .card h2{
+    font-family:'Figtree',sans-serif; font-size:15px; font-weight:600;
+    margin:0 0 4px; display:flex; align-items:center; gap:10px;
+  }
+  .card h2 .num{
+    width:22px; height:22px; border-radius:6px; background:var(--marino); color:#fff;
+    font-size:12px; font-family:'IBM Plex Mono',monospace;
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .card .desc{ color:var(--ink-soft); font-size:12.5px; margin:0 0 16px 32px; }
+  .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-left:32px; }
+  .grid1{ margin-left:32px; }
+  @media (max-width:600px){ .grid2{grid-template-columns:1fr;} }
+  label{ display:block; font-size:12px; font-weight:600; color:var(--ink); margin-bottom:5px; }
+  label .opt{ font-weight:400; color:var(--ink-soft); }
+  select, input[type=text]{
+    width:100%; padding:9px 10px; border-radius:8px; border:1px solid var(--line);
+    background:#fff; font-family:'Figtree',sans-serif; font-size:13.5px; color:var(--ink);
+  }
+  select:focus, input:focus{ outline:2px solid var(--accent); outline-offset:1px; border-color:var(--accent); }
+  select:disabled, input:disabled, input:read-only{ background:#F2F3F7; color:#B4B8C4; cursor:not-allowed; }
+  .field{ margin-bottom:12px; }
+  .hint{ font-size:11px; color:var(--ink-soft); margin-top:4px; }
+  .hint-error{ color:#C0392B !important; font-weight:600; }
+  .attr-box{ margin-left:32px; margin-top:4px; padding:14px 16px; background:var(--accent-soft); border-radius:10px; }
+  .attr-box .grid2{ margin-left:0; }
+  .attr-box .field-title{
+    font-size:11.5px; font-weight:600; color:var(--accent);
+    margin-bottom:10px; text-transform:uppercase; letter-spacing:.03em;
+  }
+  .radio-row{ display:flex; gap:8px; margin-left:32px; margin-bottom:14px; flex-wrap:wrap; }
+  .radio-pill{
+    font-size:12.5px; font-weight:600; padding:8px 14px; border-radius:20px;
+    border:1px solid var(--line); background:#fff; cursor:pointer; color:var(--ink-soft);
+  }
+  .radio-pill.active{ background:var(--accent); color:#fff; border-color:var(--accent); }
+  .sticky{ position:sticky; top:24px; }
+  .preview-title{ font-family:'Figtree',sans-serif; font-size:15px; font-weight:600; margin:0 0 14px; }
+  .chips{ display:flex; flex-wrap:wrap; gap:6px; margin-bottom:16px; }
+  .chip{ font-family:'IBM Plex Mono',monospace; font-size:11.5px; padding:5px 9px; border-radius:7px; color:#fff; line-height:1.3; }
+  .chip.empty{ background:#fff; color:#B4B8C4; border:1px dashed var(--line); }
+  .param-row{ display:flex; justify-content:space-between; align-items:flex-start; gap:8px; padding:9px 0; border-bottom:1px solid var(--line); }
+  .param-row:last-of-type{ border-bottom:none; }
+  .param-row .k{ font-size:11.5px; color:var(--ink-soft); font-weight:600; white-space:nowrap; padding-top:2px; }
+  .param-row .v{ font-family:'IBM Plex Mono',monospace; font-size:12.5px; text-align:right; word-break:break-all; }
+  .url-box{
+    margin-top:16px; padding:12px 14px; background:#F9FAFC; border:1px solid var(--line);
+    border-radius:10px; font-family:'IBM Plex Mono',monospace; font-size:11.5px; line-height:1.5;
+    word-break:break-all; color:var(--ink); min-height:20px;
+  }
+  .actions{ display:flex; gap:8px; margin-top:14px; flex-wrap:wrap; }
+  button{
+    font-family:'Figtree',sans-serif; font-weight:600; font-size:13px; border-radius:9px;
+    border:none; padding:10px 16px; cursor:pointer; transition:transform .05s ease, opacity .15s ease;
+  }
+  button:active{ transform:scale(0.97); }
+  .btn-primary{ background:var(--accent); color:#fff; }
+  .btn-primary:hover{ opacity:.88; }
+  .btn-ghost{ background:#fff; border:1px solid var(--line); color:var(--ink); }
+  .btn-ghost:hover{ background:#F5F6FA; }
+  .btn-primary:disabled{ background:#D3D5DE; cursor:not-allowed; }
+  .msg{ font-size:12px; margin-top:10px; padding:8px 10px; border-radius:8px; }
+  .msg.warn{ background:var(--warn-soft); color:var(--warn); }
+  .msg.error{ background:#FDECEA; color:#C0392B; }
+  .msg.ok{ background:var(--ok-soft); color:var(--ok); }
+  table{ width:100%; border-collapse:collapse; font-size:12px; margin-top:8px; }
+  th{
+    text-align:left; font-size:10.5px; text-transform:uppercase; letter-spacing:.03em;
+    color:var(--ink-soft); padding:6px 8px; border-bottom:1px solid var(--line);
+  }
+  td{ padding:8px; border-bottom:1px solid var(--line); font-family:'IBM Plex Mono',monospace; font-size:11px; vertical-align:top; word-break:break-all; }
+  td.del{ font-family:'Figtree',sans-serif; text-align:center; cursor:pointer; color:var(--ink-soft); }
+  td.del:hover{ color:#C0392B; }
+  .empty-log{ color:var(--ink-soft); font-size:12.5px; padding:10px 0; }
+  .namecard{ margin-bottom:12px; }
+  .namecard-label{
+    font-size:11px; font-weight:600; color:var(--ink-soft);
+    text-transform:uppercase; letter-spacing:.03em; margin-bottom:5px;
+  }
+  .namecard-row{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    background:#F9FAFC; border:1px solid var(--line); border-radius:10px; padding:10px 12px;
+  }
+  .namecard-value{
+    font-family:'IBM Plex Mono',monospace; font-size:12px; word-break:break-all; color:var(--ink);
+  }
+  .btn-copy-mini{
+    flex-shrink:0; background:#fff; border:1px solid var(--line); border-radius:20px;
+    padding:6px 14px; font-size:12px; font-weight:600; font-family:'Figtree',sans-serif;
+    cursor:pointer; color:var(--ink);
+  }
+  .btn-copy-mini:hover{ background:#F5F6FA; }
+  .marca-badge{
+    display:inline-block; width:14px; height:14px; border-radius:50%;
+    flex-shrink:0; border:2px solid #fff; box-shadow:0 0 0 1px var(--line);
+    transition:background-color .15s ease;
+  }
+  footer{ margin-top:28px; color:var(--ink-soft); font-size:11.5px; text-align:center; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="brandbar">
+    <div class="wordmark"><span class="dot"></span>Grupo Aspasia</div>
+  </div>
+
+  <header class="top">
+    <div>
+      <h1>Generador de UTMs</h1>
+      <p>Estructura fija, valores gobernados, campos abiertos donde hace falta flexibilidad.</p>
+    </div>
+    <div class="badge">separador &quot;_&quot; · minúsculas · sin tildes</div>
+  </header>
+
+  <div class="layout">
+    <!-- FORM COLUMN -->
+    <div>
+
+      <!-- STEP 1: Medio y fuente -->
+      <div class="card">
+        <h2><span class="num">1</span>Medio y fuente</h2>
+        <p class="desc">utm_medium define el canal; utm_source solo muestra las opciones válidas para ese medio.</p>
+        <div class="grid2">
+          <div class="field">
+            <label for="medium">utm_medium</label>
+            <select id="medium"></select>
+          </div>
+          <div class="field">
+            <label for="source">utm_source</label>
+            <select id="source"></select>
+          </div>
+        </div>
+        <div class="grid2" id="term-row-google" style="display:none;">
+          <div class="field">
+            <label for="term">utm_term — tipo de campaña Google Ads <span class="opt">(opcional)</span></label>
+            <select id="term"></select>
+          </div>
+          <div class="field" id="term-custom-field" style="display:none;">
+            <label for="term-custom">Especifica el tipo</label>
+            <input type="text" id="term-custom" placeholder="p. ej. shopping_smart">
+            <div class="hint">Todo en minúsculas y sin tildes. Si son varias palabras, sepáralas con "_".</div>
+          </div>
+        </div>
+        <div class="grid2" id="term-row-perfil" style="display:none;">
+          <div class="field">
+            <label for="perfil">utm_term — perfil / nombre <span class="opt">(recomendado)</span></label>
+            <input type="text" id="perfil" placeholder="p. ej. maria_garcia, juan_lopez">
+            <div class="hint">Identifica al influencer o prescriptor concreto con su nombre. Todo en minúsculas y sin tildes; varias palabras separadas por "_".</div>
+          </div>
+          <div></div>
+        </div>
+        <div class="grid2" id="term-row-afiliacion" style="display:none;">
+          <div class="field">
+            <label for="estrategia-afiliacion">utm_term — estrategia de afiliación <span class="opt">(recomendado)</span></label>
+            <select id="estrategia-afiliacion"></select>
+          </div>
+          <div class="field" id="estrategia-afiliacion-custom-field" style="display:none;">
+            <label for="estrategia-afiliacion-custom">Especifica la estrategia</label>
+            <input type="text" id="estrategia-afiliacion-custom" placeholder="p. ej. programa_referidos">
+            <div class="hint">Todo en minúsculas y sin tildes. Si son varias palabras, sepáralas con "_".</div>
+          </div>
+        </div>
+        <div class="grid2" id="term-row-email" style="display:none;">
+          <div class="field">
+            <label for="term-email">utm_term <span class="opt">(opcional)</span></label>
+            <input type="text" id="term-email" placeholder="p. ej. newsletter_octubre">
+            <div class="hint">Identificador libre del envío/segmento de email. Minúsculas, sin tildes, "_" entre palabras.</div>
+          </div>
+          <div></div>
+        </div>
+      </div>
+
+      <!-- STEP 2: Campaña -->
+      <div class="card">
+        <h2><span class="num">2</span>Campaña <span style="font-weight:400;color:var(--ink-soft);font-size:12px;">(utm_campaign)</span></h2>
+        <p class="desc">marca_fuente_ubicación_producto_tipo_objetivo_funnel_segmentación_extra</p>
+
+        <div class="grid2">
+          <div class="field">
+            <label for="marca">Marca</label>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <select id="marca" style="flex:1;"></select>
+              <span id="marca-badge" class="marca-badge"></span>
+            </div>
+          </div>
+          <div class="field">
+            <label for="tipo">Tipo de campaña (destino)</label>
+            <select id="tipo"></select>
+          </div>
+        </div>
+
+        <div class="grid2" id="gerencia-row" style="display:none;">
+          <div class="field">
+            <label for="gerencia">Gerencia</label>
+            <select id="gerencia"></select>
+            <div class="hint">Campo propio de Aspasia, independiente de la ubicación. Usa guion "-" como separador en esta marca.</div>
+          </div>
+          <div class="field" id="asp-sede-field" style="display:none;">
+            <label for="asp-sede">Sede <span class="opt">(opcional)</span></label>
+            <select id="asp-sede"></select>
+          </div>
+        </div>
+        <div class="grid2" id="asp-ccaa-row" style="display:none;">
+          <div class="field" id="asp-provincia2-field" style="display:none;">
+            <label for="asp-provincia2">Provincia <span class="opt">(opcional)</span></label>
+            <select id="asp-provincia2"></select>
+            <div class="hint">Solo si hacemos segmentación a nivel provincia dentro de la CCAA.</div>
+          </div>
+          <div></div>
+        </div>
+        <div class="grid2" id="asp-plan-row" style="display:none;">
+          <div class="field">
+            <label for="asp-plan">Plan <span class="opt">(opcional)</span></label>
+            <select id="asp-plan"></select>
+          </div>
+          <div class="field" id="asp-expediente-field">
+            <label for="asp-expediente">Expediente_empresa <span class="opt">(opcional)</span></label>
+            <input type="text" id="asp-expediente" placeholder="numeroexpediente_empresa">
+            <div class="hint">Escribe el número de expediente y la empresa separados por guion bajo: <strong>numeroexpediente_empresa</strong> (minúsculas, sin tildes).</div>
+          </div>
+        </div>
+        <div class="grid2" id="asp-modalidad-row" style="display:none;">
+          <div class="field">
+            <label for="asp-modalidad">Modalidad <span class="opt">(opcional)</span></label>
+            <select id="asp-modalidad"></select>
+          </div>
+          <div class="field">
+            <label for="asp-audiencia">Audiencia <span class="opt">(opcional)</span></label>
+            <select id="asp-audiencia"></select>
+          </div>
+        </div>
+
+        <div id="ambito-section">
+          <label style="margin-left:32px;">Ámbito geográfico</label>
+          <div class="radio-row" id="ambito-row">
+            <div class="radio-pill active" data-ambito="nacional">Nacional</div>
+            <div class="radio-pill" data-ambito="ccaa">Autonómico</div>
+            <div class="radio-pill" data-ambito="provincia">Provincial</div>
+          </div>
+
+          <div class="grid2" id="ccaa-row" style="display:none;">
+            <div class="field">
+              <label for="ccaa">Comunidad autónoma</label>
+              <select id="ccaa"></select>
+            </div>
+            <div class="field" id="provincia-field" style="display:none;">
+              <label for="provincia">Provincia</label>
+              <select id="provincia"></select>
+            </div>
+          </div>
+          <div class="grid2" id="ciudad-row" style="display:none;">
+            <div class="field">
+              <label for="ciudad">Ciudad <span class="opt">(opcional, para campañas hiperlocales)</span></label>
+              <input type="text" id="ciudad" placeholder="p. ej. san_sebastian">
+              <div class="hint">Nombre completo de la ciudad, en minúsculas y sin tildes. Si tiene varias palabras, sepáralas con "_" (ej. san_sebastian, palma_de_mallorca).</div>
+            </div>
+            <div></div>
+          </div>
+        </div>
+
+        <div class="grid2" id="producto-select-row">
+          <div class="field">
+            <label for="producto">Producto / categoría</label>
+            <select id="producto"></select>
+            <div class="hint">Al elegir un producto específico, su código se añade automáticamente entre doble guion bajo (ej. <strong>__admest__</strong>), justo antes de la ubicación. Las categorías mantienen el formato de siempre.</div>
+          </div>
+          <div></div>
+        </div>
+        <div class="grid2" id="producto-libre-row" style="display:none;">
+          <div class="field">
+            <label for="producto-libre">Código SEPE / Código acción <span class="opt">(código a parametrizar)</span></label>
+            <input type="text" id="producto-libre" placeholder="__xxxx__">
+            <div class="hint">Este campo es para que el account que parametrice la campaña añada el código SEPE/código de acción. Debe escribirse entre doble guion bajo, así: <strong>__xxxx__</strong>. Si la campaña no va dirigida a ningún curso concreto, escribe siempre <strong>__gral__</strong>.</div>
+          </div>
+          <div class="field">
+            <label for="curso-nombre-auto">Nombre del curso <span class="opt">(automático)</span></label>
+            <input type="text" id="curso-nombre-auto" placeholder="se rellena solo al escribir el código" readonly>
+            <div class="hint" id="curso-nombre-hint">No se escribe a mano: al introducir el código SEPE/acción de arriba, el nombre del curso se vuelca aquí solo y se añade también al utm_campaign, justo después del código.</div>
+          </div>
+        </div>
+
+        <div class="grid2">
+          <div class="field">
+            <label for="objetivo">Objetivo</label>
+            <select id="objetivo"></select>
+          </div>
+          <div class="field">
+            <label for="funnel">Funnel</label>
+            <select id="funnel"></select>
+          </div>
+        </div>
+
+        <div class="grid2">
+          <div class="field">
+            <label for="segmentacion">Segmentación</label>
+            <select id="segmentacion"></select>
+          </div>
+          <div class="field">
+            <label for="extra">Extra <span class="opt">(opcional)</span></label>
+            <input type="text" id="extra" placeholder="p. ej. blackfriday, navidad, promo10dto">
+            <div class="hint">Solo si hay un hito puntual detrás (promoción, estacionalidad, test). Déjalo vacío en el resto de campañas. Todo en minúsculas y sin tildes; si son varias palabras, sepáralas con "_".</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 3: Contenido -->
+      <div class="card">
+        <h2><span class="num">3</span>Creatividad <span style="font-weight:400;color:var(--ink-soft);font-size:12px;">(utm_content)</span></h2>
+        <p class="desc">
+          Patrón a seguir, siempre en este orden: <strong>formato_atributo1_atributo2</strong><br>
+          Ejemplo: <code style="font-family:'IBM Plex Mono',monospace;">video_duracion_15s_testimonial</code><br>
+          Todo en minúsculas, sin espacios ni tildes (usa "_" para separar palabras dentro de un mismo campo).
+        </p>
+        <div class="grid2">
+          <div class="field">
+            <label for="formato">Formato</label>
+            <select id="formato"></select>
+          </div>
+          <div></div>
+        </div>
+        <div class="attr-box">
+          <div class="field-title">Atributos opcionales de la pieza (máx. 2)</div>
+          <div class="grid2">
+            <div class="field">
+              <label for="attr1">Atributo 1 — dato técnico de la pieza</label>
+              <input type="text" id="attr1" placeholder="p. ej. duracion_15s">
+              <div class="hint" id="attr1-hint">Elige un formato para ver un ejemplo orientativo.</div>
+            </div>
+            <div class="field">
+              <label for="attr2">Atributo 2 — rasgo que caracteriza la creatividad</label>
+              <input type="text" id="attr2" placeholder="p. ej. testimonial">
+              <div class="hint" id="attr2-hint">Elige un formato para ver un ejemplo orientativo.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 4: Destino -->
+      <div class="card">
+        <h2><span class="num">4</span>URL de destino <span class="opt" style="font-weight:400;font-size:12px;">(opcional)</span></h2>
+        <p class="desc">Pega la landing o URL del producto para generar el enlace completo.</p>
+        <div class="grid1">
+          <div class="field">
+            <label for="dest-url">URL destino</label>
+            <input type="text" id="dest-url" placeholder="https://www.opositafijo.com/policia-nacional">
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- PREVIEW COLUMN -->
+    <div class="sticky">
+      <div class="card">
+        <p class="preview-title">Vista previa</p>
+        <div class="chips" id="chips"></div>
+
+        <div class="param-row"><div class="k">utm_medium</div><div class="v" id="out-medium">—</div></div>
+        <div class="param-row"><div class="k">utm_source</div><div class="v" id="out-source">—</div></div>
+        <div class="param-row" id="term-preview-row" style="display:none;"><div class="k">utm_term</div><div class="v" id="out-term">—</div></div>
+        <div class="param-row"><div class="k">utm_campaign</div><div class="v" id="out-campaign">—</div></div>
+        <div class="param-row"><div class="k">utm_content</div><div class="v" id="out-content">—</div></div>
+
+        <div class="url-box" id="out-url">Completa el formulario para generar la URL…</div>
+
+        <div id="validation"></div>
+
+        <div class="actions">
+          <button class="btn-primary" id="btn-copy">Copiar y guardar URL</button>
+          <button class="btn-ghost" id="btn-reset">Reiniciar</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <p class="preview-title">Nombres y UTM creados</p>
+        <div id="validador-banner" class="msg warn">Completa el formulario para validar la estructura.</div>
+
+        <div class="namecard">
+          <div class="namecard-label">Campaña</div>
+          <div class="namecard-row">
+            <div class="namecard-value" id="out-name-campana">—</div>
+            <button class="btn-copy-mini" data-copy="out-name-campana">Copiar</button>
+          </div>
+        </div>
+        <div class="namecard">
+          <div class="namecard-label">Grupo de anuncios</div>
+          <div class="namecard-row">
+            <div class="namecard-value" id="out-name-grupo">—</div>
+            <button class="btn-copy-mini" data-copy="out-name-grupo">Copiar</button>
+          </div>
+        </div>
+        <div class="namecard">
+          <div class="namecard-label">Anuncio</div>
+          <div class="namecard-row">
+            <div class="namecard-value" id="out-name-anuncio">—</div>
+            <button class="btn-copy-mini" data-copy="out-name-anuncio">Copiar</button>
+          </div>
+        </div>
+        <div class="namecard">
+          <div class="namecard-label">UTM</div>
+          <div class="namecard-row">
+            <div class="namecard-value" id="out-name-utm">—</div>
+            <button class="btn-copy-mini" data-copy="out-name-utm">Copiar</button>
+          </div>
+        </div>
+        <div class="namecard">
+          <div class="namecard-label">URL final</div>
+          <div class="namecard-row">
+            <div class="namecard-value" id="out-name-urlfinal">—</div>
+            <button class="btn-copy-mini" data-copy="out-name-urlfinal">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <p class="preview-title">Histórico de URLs</p>
+        <p class="desc" style="margin-left:0;">Se guarda solo al pulsar "Copiar y guardar URL" (no antes) — así el histórico refleja únicamente las URLs que de verdad se han usado, compartido con todo el equipo.</p>
+        <div id="log-empty" class="empty-log">Aún no has guardado ninguna URL.</div>
+        <table id="log-table" style="display:none;">
+          <thead><tr><th>Hora</th><th>Marca</th><th>Campaign</th><th>Content</th><th>URL</th><th></th></tr></thead>
+          <tbody id="log-body"></tbody>
+        </table>
+        <div class="actions">
+          <button class="btn-ghost" id="btn-export" style="display:none;">Exportar CSV</button>
+          <button class="btn-primary" id="btn-export-excel" style="display:none;">Descargar histórico (Excel)</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>Diccionario maestro por marca disponible en el Excel de referencia del equipo. Los campos "Otro"/"Especifica..." quedan pendientes de incorporar al diccionario correspondiente.</footer>
+</div>
+
+<script>
+// ---------- DATA ----------
+const OTRO = '__otro__';
+
+// utm_content — formato: lista cerrada y depurada (sin duplicados como 'car',
+// sin redundancias con medium/term como 'influ_post'/'influ_reels'/'ugc').
+// Cada formato lleva su propio ejemplo de atributo 1 (dato técnico) y
+// atributo 2 (rasgo característico), ya que varían mucho entre piezas.
+const FORMATO_ATTR_HINTS = {
+  leadform:     {a1Ph:'campos_3',        a1Hint:'Dato técnico: nº de campos del formulario. Ej: campos_3.',
+                 a2Ph:'oferta',          a2Hint:'Rasgo de la creatividad: oferta, institucional, matricula...'},
+  video:        {a1Ph:'duracion_15s',    a1Hint:'Dato técnico: duracion_15s, duracion_30s, duracion_60s.',
+                 a2Ph:'testimonial',     a2Hint:'Rasgo: testimonial, ugc, storytelling, tutorial...'},
+  banner:       {a1Ph:'tamano_300x250',  a1Hint:'Dato técnico: tamaño IAB. Ej: tamano_728x90, tamano_300x250.',
+                 a2Ph:'oferta',          a2Hint:'Rasgo: oferta, institucional, comparativa, con_precio...'},
+  html:         {a1Ph:'tamano_728x90',   a1Hint:'Dato técnico: tamaño de la pieza HTML/rich media.',
+                 a2Ph:'interactivo',     a2Hint:'Rasgo: interactivo, oferta, institucional...'},
+  img:          {a1Ph:'tamano_1080x1080',a1Hint:'Dato técnico: tamaño/formato de la imagen.',
+                 a2Ph:'producto',        a2Hint:'Rasgo: producto, oferta, institucional...'},
+  textlink:     {a1Ph:'posicion_footer', a1Hint:'Dato técnico: dónde se ubica el enlace en la página.',
+                 a2Ph:'oferta',          a2Hint:'Rasgo: oferta, institucional, comparativa...'},
+  reel:         {a1Ph:'duracion_15s',    a1Hint:'Dato técnico: duracion_15s, duracion_30s.',
+                 a2Ph:'gancho',          a2Hint:'Rasgo: gancho, testimonial, storytelling, humor...'},
+  carrusel:     {a1Ph:'num_tarjetas_5',  a1Hint:'Dato técnico: nº de tarjetas del carrusel.',
+                 a2Ph:'producto',        a2Hint:'Rasgo: producto, oferta, comparativa...'},
+  post_imagen:  {a1Ph:'idioma_es',       a1Hint:'Dato técnico: idioma_es, idioma_ca, idioma_eu.',
+                 a2Ph:'oferta',          a2Hint:'Rasgo: oferta, institucional, gancho...'},
+  post_texto:   {a1Ph:'longitud_corta',  a1Hint:'Dato técnico: longitud_corta, longitud_larga.',
+                 a2Ph:'institucional',   a2Hint:'Rasgo: institucional, oferta, storytelling...'},
+  story_imagen: {a1Ph:'idioma_es',       a1Hint:'Dato técnico: idioma_es, idioma_ca, idioma_eu.',
+                 a2Ph:'oferta',          a2Hint:'Rasgo: oferta, urgencia, gancho...'},
+  story_video:  {a1Ph:'duracion_15s',    a1Hint:'Dato técnico: duracion_15s, duracion_30s.',
+                 a2Ph:'testimonial',     a2Hint:'Rasgo: testimonial, ugc, gancho...'},
+  shorts:       {a1Ph:'duracion_30s',    a1Hint:'Dato técnico: duracion_15s, duracion_30s, duracion_60s.',
+                 a2Ph:'gancho',          a2Hint:'Rasgo: gancho, testimonial, storytelling...'},
+  infografia:   {a1Ph:'num_datos_5',     a1Hint:'Dato técnico: nº de datos/puntos representados.',
+                 a2Ph:'informativo',     a2Hint:'Rasgo: informativo, comparativa, institucional...'},
+  valla:        {a1Ph:'tamano_8x3',      a1Hint:'Dato técnico: tamaño de la valla.',
+                 a2Ph:'institucional',   a2Hint:'Rasgo: institucional, oferta, marca...'},
+  mupis:        {a1Ph:'tamano_1x2',      a1Hint:'Dato técnico: tamaño del mupi.',
+                 a2Ph:'oferta',          a2Hint:'Rasgo: oferta, institucional, marca...'},
+  transporte:   {a1Ph:'tipo_metro',      a1Hint:'Dato técnico: tipo_metro, tipo_bus, tipo_tren.',
+                 a2Ph:'oferta',          a2Hint:'Rasgo: oferta, institucional, marca...'},
+  flyer:        {a1Ph:'tirada_5000',     a1Hint:'Dato técnico: tirada / nº de ejemplares.',
+                 a2Ph:'oferta',          a2Hint:'Rasgo: oferta, institucional, producto...'},
+  buzoneo:      {a1Ph:'tirada_10000',    a1Hint:'Dato técnico: tirada / nº de ejemplares repartidos.',
+                 a2Ph:'oferta',          a2Hint:'Rasgo: oferta, institucional, producto...'},
+  stand:        {a1Ph:'aforo_100',       a1Hint:'Dato técnico: aforo estimado del evento.',
+                 a2Ph:'institucional',   a2Hint:'Rasgo: institucional, producto, networking...'},
+  charla:       {a1Ph:'duracion_1h',     a1Hint:'Dato técnico: duración de la charla.',
+                 a2Ph:'institucional',   a2Hint:'Rasgo: institucional, producto, storytelling...'},
+  inmail:       {a1Ph:'asunto_test_a',   a1Hint:'Dato técnico: variante de asunto si hay test A/B.',
+                 a2Ph:'personalizado',   a2Hint:'Rasgo: personalizado, oferta, institucional...'},
+  conversation_ads: {a1Ph:'num_botones_3', a1Hint:'Dato técnico: nº de botones/opciones de la conversación.',
+                 a2Ph:'conversacional',  a2Hint:'Rasgo: conversacional, oferta, gancho...'},
+};
+const FORMATO_ITEMS = [
+  {v:'leadform', l:'Leadform'},
+  {v:'video', l:'Vídeo'},
+  {v:'banner', l:'Banner'},
+  {v:'html', l:'HTML'},
+  {v:'img', l:'Imagen'},
+  {v:'textlink', l:'Text link'},
+  {v:'reel', l:'Reel'},
+  {v:'carrusel', l:'Carrusel'},
+  {v:'post_imagen', l:'Post imagen'},
+  {v:'post_texto', l:'Post texto'},
+  {v:'story_imagen', l:'Story imagen'},
+  {v:'story_video', l:'Story vídeo'},
+  {v:'shorts', l:'Shorts'},
+  {v:'infografia', l:'Infografía'},
+  {v:'valla', l:'Valla'},
+  {v:'mupis', l:'Mupi'},
+  {v:'transporte', l:'Transporte'},
+  {v:'flyer', l:'Flyer'},
+  {v:'buzoneo', l:'Buzoneo'},
+  {v:'stand', l:'Stand'},
+  {v:'charla', l:'Charla'},
+  {v:'inmail', l:'InMail (LinkedIn)'},
+  {v:'conversation_ads', l:'Conversation Ads (LinkedIn)'},
+];
+
+const MEDIUMS = [
+  {v:'paid_social', l:'Paid social', sources:['meta','tiktok','linkedin']},
+  {v:'paid_search', l:'Paid search', sources:['google','bing','youtube']},
+  {v:'afiliacion', l:'Afiliación', sources:['antevenio','arkeero','across','emagister','educaweb','ignium','dolead']},
+  {v:'email', l:'Email', sources:['ima','ima_mkt','mcp','ac']},
+  {v:'organic_social', l:'Organic social', sources:['meta','tiktok','linkedin']},
+  {v:'influencers', l:'Influencers', sources:['instagram','tiktok','youtube','twitch']},
+  {v:'prescriptores', l:'Prescriptores', sources:['instagram','tiktok','youtube','blog']},
+  {v:'referral', l:'Referral', sources:['elpais','elmundo','abc','lavanguardia','elconfidencial','eldiario','20minutos','marca','elespanol','antena3','telecinco','rtve']},
+  {v:'offline', l:'Offline', sources:['ooh','btl','feria']},
+];
+
+const TERM_OPTIONS = [
+  {v:'search', l:'Search estándar'},
+  {v:'pmax', l:'Performance Max'},
+  {v:'demand_gen', l:'Demand Gen'},
+  {v:'display', l:'Display (red de Google)'},
+  {v:'video', l:'Video (YouTube Ads)'},
+  {v:'shopping', l:'Shopping'},
+];
+
+const AFILIACION_ESTRATEGIA_OPTIONS = [
+  {v:'email', l:'Email marketing (del afiliado)'},
+  {v:'compar', l:'Comparador de precios'},
+  {v:'cashback', l:'Cashback'},
+  {v:'cupon', l:'Cupón / código descuento'},
+  {v:'review', l:'Review / comparativa editorial'},
+  {v:'blog', l:'Contenido / blog'},
+  {v:'retarget', l:'Retargeting (del afiliado)'},
+  {v:'display', l:'Display (del afiliado)'},
+  {v:'social', l:'Redes sociales (del afiliado)'},
+  {v:'deals', l:'Deal site / chollos'},
+  {v:OTRO, l:'+ Otra estrategia'},
+];
+
+const CCAA = [
+  {v:'and', l:'Andalucía', provincias:['almeria','cadiz','cordoba','granada','huelva','jaen','malaga','sevilla']},
+  {v:'ara', l:'Aragón', provincias:['huesca','teruel','zaragoza']},
+  {v:'ast', l:'Asturias', provincias:['asturias']},
+  {v:'bal', l:'Islas Baleares', provincias:['baleares']},
+  {v:'can', l:'Canarias', provincias:['las_palmas','sta_cruz_tenerife']},
+  {v:'cnt', l:'Cantabria', provincias:['cantabria']},
+  {v:'cyl', l:'Castilla y León', provincias:['avila','burgos','leon','palencia','salamanca','segovia','soria','valladolid','zamora']},
+  {v:'cym', l:'Castilla-La Mancha', provincias:['albacete','ciudad_real','cuenca','guadalajara','toledo']},
+  {v:'cat', l:'Cataluña', provincias:['barcelona','girona','lleida','tarragona']},
+  {v:'val', l:'C. Valenciana', provincias:['alicante','castellon','valencia']},
+  {v:'ext', l:'Extremadura', provincias:['badajoz','caceres']},
+  {v:'gal', l:'Galicia', provincias:['a_coruna','lugo','ourense','pontevedra']},
+  {v:'mad', l:'Madrid', provincias:['madrid']},
+  {v:'mur', l:'Murcia', provincias:['murcia']},
+  {v:'nav', l:'Navarra', provincias:['navarra']},
+  {v:'pva', l:'País Vasco', provincias:['araba','bizkaia','gipuzkoa']},
+  {v:'rja', l:'La Rioja', provincias:['la_rioja']},
+  {v:'ceu', l:'Ceuta', provincias:['ceuta']},
+  {v:'mel', l:'Melilla', provincias:['melilla']},
+];
+
+// Sede: solo aplica a la gerencia Canarias.
+const SEDES_CANARIAS = [
+  {v:'las_palmas', l:'Las Palmas'},
+  {v:'los_realejos', l:'Los Realejos'},
+  {v:'guimar', l:'Güímar'},
+];
+
+// Catálogo de cursos subvencionados Aspasia (estatal + autonómico).
+// Código de acción (SEPE/acción) -> nombre de curso normalizado (minúsculas, sin tildes, "_", máx. 40 caracteres).
+// Se usa SOLO para nombrar Campaña/Grupo de anuncios/Anuncio; el utm_campaign de tracking sigue usando el código __xxxx__ tal cual.
+const CURSO_POR_CODIGO = {"SANT0208":"transporte_sanitario","MF1015_2":"gestion_de_las_operaciones_de_almacenaje","MF0952_2":"publicacion_de_paginas_web","MF1057_2":"ingles_profesional_para_turismo","MF0072_2":"tecnicas_de_apoyo_psicologico_y_social","MF0069_1":"operaciones_de_mantenimiento_preventivo","MF0432_1":"manipulacion_de_cargas_con_carretillas","MF1326_1":"preparacion_de_pedidos","SSCE05":"ingles_c1","SSCE04":"ingles_b2","SSCE03":"ingles_b1","SSCE02":"ingles_a2","SSCE01":"ingles_a1","SSCE0066":"teleformacion_en_la_docencia","SANP0007":"salud_nutricion_y_dietetica","IFCT161PO":"analisis_de_datos_y_programacion_con","IFCT0141":"introduccion_a_la_inteligencia","IFCT0049":"chatgpt_e_inteligencia_artifical","IFCD0194":"programacion_de_dispositivos_moviles","IFCD0127":"desarrollo_web_para_comercio_electronico","COMT0075":"facturacion_electronica","COMM18":"inteligencia_artificial_ia_aplicada_a","COMM0100":"marketing_y_reputacion_online","ADGD039PO":"contabilidad_financiera","ADGD0071":"nominas","ADGN027PO":"controler_financiero","ENAC001PO":"eficiencia_energetica","IFCM0006":"google_y_sus_aplicaciones","IFCT0158":"gestion_de_la_seguridad_informatica_en","ADGD037PO":"contabilidad","ADGD266PO":"tramites_on_line_con_la_seguridad_social","IFCT0023":"ciberseguridad","ADGG040PO":"internet_redes_sociales_y_dispositivos","ADGD267PO":"tramites_on_line_con_la_administracion","ADGG057PO":"ofimatica_aplicaciones_informaticas_de","ADGN15":"facturacion_en_la_empresa_con_un","IFCT0019":"inteligencia_artificial_aplicada_a_la","ADGG055PO":"ofimatica_en_la_nube_google_drive","ADGD008PO":"analisis_de_problemas_y_toma_de","ADGD077PO":"direccion_y_gestion_equipos_de_proyectos","ADGD128PO":"gestion_de_proyectos","ADGD167PO":"inteligencia_emocional_en_la_empresa_y","ADGD204PO":"plan_de_igualdad_desarrollo","ADGD75":"resolucion_de_conflictos","ADGN054PO":"gestion_de_costes","AFDP021PO":"tecnicas_basicas_de_primeros_auxilios","COMT051PO":"habilidades_comerciales","COMT080PO":"seleccion_y_formacion_del_equipo","CTRL0003":"ingles_empresarial","EOCO103PO":"piloto_de_drones_con_dji_phantom_4_pro","FCOM01":"manipulacion_de_alimentos","SEAG032PO":"gestion_sostenible_de_los_residuos","SSCG061PO":"orientacion_profesional","COMM001PO":"analitica_web_para_medir_resultados_de","ELEE018PO":"automatas_programables","IFCM008PO":"google_adwords_y_sus_aplicaciones","IFCT029PO":"creacion_de_blogs_y_redes_sociales","IFCT184PO":"analisis_de_datos_y_vinculacion_de_bbdd","ADGG016PO":"desarrollo_tecnologico_mobile_business","IFCD031PO":"desarrollo_de_servicios_web","IFCM002PO":"cloud_computing","SSCE080PO":"gestion_de_la_formacion","IFCT083PO":"programacion_de_dispositivos_moviles","IFCT106PO":"proteccion_de_equipos_en_la_red","IFCT153PO":"introduccion_al_big_data_y_business","IFCT155PO":"introduccion_a_la_inteligencia","ADGG021PO":"fundamentos_excel","IFCT118":"social_media_redes_sociales_y_comunity","IFCT45":"competencias_digitales_basicas","IFCT46":"competencias_digitales_avanzadas","ADGD38":"habilidades_avanzadas_de_comunicacion","IFCT110":"gestion_de_herramientas_avanzadas_de","IFCT117":"introduccion_a_la_inteligencia","ADGD391PO":"direccion_de_proyectos_pmi_i","ADGD358PO":"direccion_de_proyectos_pmi_ii","FCOO02":"sensibilizacion_en_la_igualdad_de","SEAD025PO":"basico_de_gestion_de_la_prevencion_de","ADGG020PO":"excel_avanzado","ADGD240PO":"salario_y_contratacion","IFCT0164":"creacion_de_blogs_y_redes_sociales","COMT0008":"comercio_en_internet_optimizacion_de","ADGD138PO":"gestion_integral_de_pymes","ADGN049PO":"fiscalidad_en_la_pyme","ADGD0003":"dirigir_equipos_de_trabajo_en_entornos","CTRL0017":"portugues_basico","MF1147_3":"calculos_de_caldereria_y_estructuras","MF1145_3":"diseno_de_productos_de_caldereria","MF1146_3":"diseno_de_productos_de_estructuras","MF1148_3":"documentacion_tecnica_para_productos_de","MP0127":"modulo_de_practicas_profesionales_no","FMEC0208":"diseno_de_caldereria_y_estructuras","SANP021PO":"nutricion_y_dietetica_deportiva","AFDA002PO":"actividades_acuaticas_para_bebes","AFDP015PO":"primeros_auxilios_en_instalaciones","ADGD121PO":"gestion_de_instalaciones_deportivas","SANT0005":"desfibriladores_externos","AFDA001PO":"actividad_fisica_para_colectivos","AFDA009PO":"estiramientos","AFDA014PO":"monitor_de_tecnicas_acuaticas","AFDA015PO":"actividades_de_entrenamiento_con_nuevos","AFDA021PO":"programacion_y_planificacion_deportiva","ADGD015PO":"auditor_a_de_sistemas_de_gestion_de_la","ADGD050PO":"control_de_quejas_y_reclamaciones","ADGD081PO":"diseno_seguimiento_y_evaluacion_de","ADGD115PO":"gestion_de_cobros_y_reclamaciones","ADGD124PO":"gestion_de_los_negocios_on_line_2_0","ADGD25":"desarrollo_gil_de_proyectos_digitales","ADGD33":"transformacion_digital","ADGD34":"gestion_digital_del_talento","ADGD46":"agile_management","ADGD49":"direccion_de_proyectos_projet","COMM23":"analitica_y_marketing_digital","FCOI31":"teletrabajo_organizacion_y_prevencion","IFCT119":"big_data_y_business_intelligence","IFCT127PO":"arquitectura_big_data","IFCT153":"analisis_de_datos_con_excel_power_query","COMT040PO":"gestion_de_ventas_marketing_directo_y","IFCD011PO":"desarrollo_de_paginas_web_css_y_joomla","IFCD023PO":"experto_web_y_multimedia_para_e","IFCD94":"herramientas_del_big_data_y_gobierno","IFCT024PO":"bases_de_datos_avanzadas","SEAG16":"desarrollo_sostenible_y_gestion","ADGN012PO":"asesoria_fiscal","CTRL0006":"comunicacion_en_lenguas_extranjeras","CTRL0009":"comunicacion_en_lenguas_extranjeras","ENAC015PO":"tecnico_a_experto_a_en_certificacion","IFCT100PO":"seguridad_de_los_sistemas_informaticos","IFCT158":"seguridad_informatica_en_entornos_de","SEAD308PO":"prevencion_burnout_o_estres_laboral","ADGD22":"el_retail_coaching_estrategias_de","COMM21":"nuevas_tendencias_en_escaparatismo_y","COMM22":"anima_y_haz_atractivo_tu_punto_de_venta","ADGD055PO":"crea_tu_tienda_on_line_con_prestashop","ADGD132PO":"gestion_de_un_pequeno_comercio","COMM03":"gestion_de_la_cyberseguridad_en_pymes","COMM048PO":"marketing_eficaz_en_pequeno","COMM05":"metodologias_agiles_en_marketing_para","IMPE009PO":"personal_shopper_en_comercio","SSCB007PO":"acogida_extraescolar_y_ludotecas","SSCE001PO":"teleformacion_para_docentes","SSCE008PO":"animacion_a_la_lectura_en_la_infancia","SSCE010PO":"aplicacion_de_las_herramientas","SSCE016PO":"atencion_al_alumnado_con_altas","SSCE017PO":"aula_multisensorial_en_educacion","SSCE018PO":"autismo_y_s_ndrome_de_asperger","SSCG007PO":"apoyo_psicologico_y_social_en","SSCB01":"diseno_y_gestion_de_proyectos_culturales","SSCE0057":"educacion_en_valores","SSCE024PO":"coordinador_a_de_comedores_escolares","SSCE025PO":"coordinador_ra_de_proyectos_pedagogicos","SSCE027PO":"creacion_de_contenidos_y_recursos","SSCE028PO":"creacion_y_dinamizacion_de_comunidades","SSCE029PO":"creatividad_para_docentes","SSCE066PO":"estimulacion_temprana","SSCE075PO":"formacion_de_formadores_en_e_learning","SSCE082PO":"gestion_y_metodologia_practica_del_e","SSCG014PO":"ciberbullying","SSCG038PO":"gestion_del_centro_educativo_infantil","TMVI032PO":"certificado_de_formacion_cap_en","SANP023PO":"nutricion_y_dietetica_en_los_ninos_y","SSCB009PO":"introduccion_a_la_animacion","SSCB015PO":"tiempo_libre_con_la_primera_infancia","SSCB016PO":"tiempo_libre_y_discapacidad_con_menores","SSCE110PO":"orientacion_laboral_y_emprendimiento","SSCE118PO":"neuromotricidad_y_escritura","SSCE130PO":"programacion_en_educacion_infantil","SSCE131PO":"programacion_neurolinguistica_y","SSCE132PO":"programacion_por_competencias","SSCE139PO":"resolucion_de_conflictos_en_educacion","SSCE140PO":"resolucion_de_conflictos_en_la_ensenanza","SSCI017PO":"monitores_de_mediodia_en_centros","SEAD15":"innovaciones_relacionadas_con_la","SANP0030":"nutricion_y_dietetica_deportiva","AFDA02":"masaje_deportivo","ADGN051PO":"fondos_de_inversion","ADGG11":"sistemas_y_plataformas_digitales","COMM34":"productos_digitales","ADGD30":"gestion_de_riesgos_en_proyectos","ADGD45":"valoracion_y_seguimiento_de_proyectos","ADGD113PO":"gestion_contable_de_una_empresa","ADGD44":"planificacion_de_proyectos","COMM0008":"organizacion_de_eventos_y_protocolo","ADGD117PO":"gestion_de_compras_y_aprovisionamiento","COMM0104":"marketing_de_destinos_turisticos_en","COMT0059":"habilidades_de_venta","IMPE008PO":"personal_shopper","IMST07":"fotografia_digital_y_empresa","ADGG075PO":"social_media_marketing_en_comercio","SSCE0073":"inteligencia_emocional_en_la_escuela","SSCE0106":"tutoria_y_ensenanzas_para_e_learning","SSCE0171":"apoyo_conductual_positivo_en_servicios","FMEM010PO":"robotica_y_programacion_aplicada_a_la","SSCE0092":"creacion_y_dinamizacion_de_comunidades","CTRE0010":"orientacion_laboral_y_emprendimiento","ELEE019PO":"programacion_y_robotica_en_el_aula","SSCE0062":"actuacion_educativa_del_monitoreo_en_el","SSCE0069":"educacion_para_la_coeducacion_la","SSCE0121":"atencion_al_alumnado_con_altas","SSCE0172":"aplicacion_del_coaching_a_la_docencia","SSCE0181":"abordaje_del_trastorno_por_deficit_de","SSCE0183":"dislexia_y_discalculia_tecnicas_para_su","SSCG0095":"estimulacion_temprana","SSCE0064":"diseno_metodologia_y_gestion_del_e","SSCE0113":"metodologia_didactica","SSCE0120":"creacion_de_contenidos_y_recursos","SSCE0141":"habilidades_de_comunicacion_en_el_aula","SSCE0173":"aplicacion_de_las_herramientas","MF1971_3":"normativa_y_politica_interna_de_gestion","MF1423_2":"atencion_y_gestion_de_llamadas","INAD016PO":"formacion_basica_en_higiene_alimentaria","AGAU25":"agricultura_ecologica_en_la_explotacion","AGAU030PO":"seguridad_higiene_y_prevencion_para","ADGD136PO":"gestion_e_incorporacion_a_la_empresa","AGAU022PO":"explotaciones_agrarias_en_agricultura","AGAU032PO":"tratamiento_sostenible_de_residuos","AGAU26":"control_de_plagas_y_enfermedades_en","AGAU47":"el_suelo_como_nucleo_de_la","ENAC009PO":"energias_renovables_en_el_sector_agrario","AGAU001PO":"abonado_y_fertilizacion_en_agricultura","AGAU007PO":"defensa_contra_plagas_y_enfermedades_en","IMAI02":"mantenimiento_industrial_en_el_sector","INAD017PO":"seguridad_e_higiene_en_el_sector","INAD04":"implantacion_de_protocolo_ifs_version_7","INAD05":"implantacion_del_protocolo_brc_version_8","ADGD52":"implantacion_de_sistemas_de_calidad_prl","ADGD143PO":"gestion_y_organizacion_de_la","ADGD50":"produccion_responsable_y_sostenible_en","ADGD51":"implantacion_del_protocolo_global_gap","AGAU020PO":"uso_eficiente_del_agua_en_el_sector","AGAU27":"formacion_integral_para_agricultores","IMAR007PO":"montaje_e_instalacion_de_frio_industrial","ADGD332PO":"planificacion_programacion_y_control_de","ENAE003PO":"diseno_y_mantenimiento_de_instalaciones","IMAR009PO":"instalacion_de_climatizacion","ADGG03":"entornos_profesionales_con_microsoft_365","ENAL005PO":"mercado_energetico_y_contratacion_de_la","SEAD0219":"tecnicas_de_prevencion_y_extincion_de","SANT0085":"comunicacion_en_procesos_terapeuticos","CTRD0022":"ofimatica_aplicaciones_informaticas_de","CTRG0011":"liderazgo_organizacion_del_trabajo_en","SEAD0238":"tecnicas_de_prevencion_de_riesgos","SANT0099":"dietoterapia","SANT0084":"comunicacion_y_atencion_a_pacientes_y","SANT0088":"deterioro_cognitivo","SANT0092":"principios_de_alimentacion_terapeutica","SANT0093":"gestion_y_servicios_la_humanizacion_en","SEAD0240":"prevencion_de_riesgos_laborales_en_el","SANP0020":"nutricion_y_dietetica_en_las_personas","SANT0090":"protocolos_de_enfermeria_relacionados","SANS0004":"introduccion_a_la_telesanidad","SANT0167":"aislamiento_hospitalario","SANT0169":"cuidados_especificos_en_las_distintas","SEAD0237":"prevencion_de_riesgos_laborales","SANT0117":"cuidados_auxiliares_basicos_en","SANT0151":"actualizacion_integral_en_el_area_de","SANT0184":"atencion_primaria_a_enfermos_de","SANT0078":"promocion_del_autocuidado_en_dependencia","SSCG0021":"servicios_asistenciales_a_personas_con","ENAA016PO":"tecnico_en_energia_hidraulica","ADGD160PO":"ingenieria_de_calidad","FMEC0017":"procesos_y_tecnicas_de_soldadura_tig","ENAC022PO":"eficiencia_energetica_en_la_industria","INAF0002":"pasteleria","COML0010":"distribucion_reparto_y_recogida_de","SEAD02":"prevencion_de_riesgos_laborales_y","HOTA0015":"gestion_de_relaciones_con_el_cliente","HOTA0014":"habilidades_interpersonales_necesarias","HOTR0103":"gestion_sostenible_en_hosteleria","HOTA02":"innovacion_en_las_tecnicas_y","HOTR06":"preparaciones_culinarias_a_base_de","SSCG0003":"orientacion_y_formacion_a_personas","CTRL0002":"aleman_elemental_aplicado_al","HOTR0005":"cocina_de_caza_setas_y_trufas","HOTR0017":"cocina_de_pescados_y_mariscos","HOTR0027":"eventos_catering_y_banquetes","HOTR0032":"evolucion_de_las_tecnologias_y_tecnicas","HOTR0042":"tecnicas_en_enologia_licores_y","HOTR0046":"manipulador_de_alimentos_y_seguridad","HOTR0047":"cocina_vegetal_y_cocina_especial_con","HOTR0054":"elaboracion_de_cafes_y_cartas_de_cafe","HOTR0060":"la_cocina_al_vacio_como_herramienta_de","HOTR0061":"elaboracion_de_helados_y_sorbetes_en","HOTR0064":"cocina_aragonesa","HOTR0066":"la_cocina_de_carne_aves_y_caza_analisis","HOTR28":"diseno_de_ofertas_gastronomicas_menus","SANP0006":"diseno_de_menus_infantiles","HOTR0012":"creacion_de_cartas_y_menus","HOTR0015":"elaboracion_de_platos_combinados","HOTR0048":"cocina_para_celiacos","HOTR0069":"tecnicas_culinarias_para_pescados","INAD0002":"manipulacion_de_alimentos_de_alto_riesgo","HOTR0040":"organizacion_de_caterings_y_eventos","HOTR0067":"gestion_del_bar_cafeteria","HOTR45":"cocina_tradicional_espanola","HOTR0049":"gestion_en_restauracion_y_diseno_en","SANP0008":"gestion_de_al_rgenos_en_el_sector_de_la","HOTR0063":"innovacion_en_la_cocina","HOTR0002":"decoracion_y_exposicion_de_platos","SSCG0111":"gestion_de_llamadas_de_teleasistencia","MF0255_1":"aprovisionamiento_preelaboracion_y","MF0256_1":"elaboracion_culinaria_basica","MP0014":"practicas_no_laborales","HOTR0108":"operaciones_basicas_de_cocina","MF0259_2":"ofertas_gastronomicas_sencillas_y","MP0017":"practicas_no_laborales","MF0260_2":"preelaboracion_y_conservacion_de","MF0262_2":"productos_culinarios","MF0711_2":"seguridad_e_higiene_y_proteccion","MF0261_2":"tecnicas_culinarias","HOTR0208":"operaciones_basicas_de_restaurante_y_bar","MF0489_3":"sistemas_seguros_de_acceso_y","MF1424_2":"emision_y_gestion_de_llamadas_salientes","MF1974_3":"prevencion_de_riesgos_ambientales","IMSV0109":"montaje_y_postproduccion_de","INAF0108":"panaderia_y_bolleria","MF0221_2":"instalacion_y_configuracion_de","ADGD038PO":"contabilidad_de_costes","ADGD042PO":"contabilidad_general_contaplus_y","ADGD072PO":"direccion_empresarial_para_emprendedores","ADGD075PO":"habilidades_directivas_y_gestion_de","ADGD098PO":"estrategia_y_comunicacion_empresarial","ADGD193PO":"normativa_juridica_en_materia_laboral","ADGD195PO":"normativa_y_asesoramiento_laboral","ADGD198PO":"nueva_normativa_laboral_contratacion","ADGD219PO":"programa_de_desarrollo_directivo","ADGD373PO":"mejora_de_la_productividad_en_las","ADGG024PO":"facturaplus_facturacion_en_la_empresa","COMM060PO":"gestion_del_marketing_y_comunidades","IFCT031PO":"creacion_programacion_y_diseno_de","ADGD069PO":"direccion_de_produccion_y_operaciones","ADGG077PO":"tecnicas_administrativas","ADGG078PO":"tecnicas_de_asistencia_a_la_direccion","IFCT061PO":"introduccion_a_los_sistemas_de","ADGD107PO":"food_defense","IMAI018PO":"instalacion_y_mantenimiento_industrial","INAD011PO":"elaboracion_y_conservacion_de_alimentos","INAD019PO":"gestion_de_sistemas_de_seguridad","SEAG011PO":"contaminacion_de_suelos","SEAG024PO":"gestion_de_residuos","AGAU010PO":"modificaciones_legislativas_de","AGAU025PO":"usuario_profesional_de_productos","INAD041PO":"protocolos_ifs_y_brc_en_seguridad","INAD045PO":"seguridad_e_higiene_en_la_industria","INAD046PO":"sistema_appcc_y_practicas_correctas_de","QUIE001PO":"seguridad_en_el_almacen_de_productos","HOTR0009":"cocina_sana","ADGD08":"analisis_de_la_rentabilidad_en_los","HOTA0003":"recepcion_y_atencion_al_cliente_en","HOTR0029":"analisis_sensorial_de_vinos","HOTA0006":"gestion_y_seguimiento_de_los_nuevos","HOTR0022":"gestion_de_la_restauracion","IFCD0038":"diseno_de_paginas_webs_para_hosteleria","COMM45":"procedimientos_basicos_en_el_marketing","HOTR0023":"servicio_en_restaurante_y_bares","HOTR0036":"servicio_especializado_en_vinos","FCOI27":"aplicacion_hoja_de_calculo_excel_nivel","FCOI28":"aplicacion_hoja_de_calculo_excel_nivel","COMM0023":"instagram_per_al_teu_negoci","CTRD0015":"linkedin_funcionalidades","CTRD0016":"tiktok_per_a_empreses","CTRD0018":"whatsapp_business_per_millorar_la","COMM15":"especialista_en_marketing_digital","FCOI15":"creacion_contenidos_digitales_nivel","FCOI16":"creacion_de_contenidos_digitales_y","IFCD0025":"fundamentos_de_programacion_con_html","IFCT124PO":"wordpress_en_el_sector_de_publicidad","COML11":"operaciones_con_carretillas_elevadoras","QUIE14":"asesoramiento_de_belleza_en_el_punto_de","QUIE16":"asesoramiento_en_dermofarmacia_en_la","QUIE17":"asesoramiento_en_dermofarmacia_y","QUIA16":"microbiologia_e_higiene_en_cosmetica","QUIE019PO":"legislacion_medioambiental_aplicada_al","QUIE18":"normativa_aplicable_en_cosmetica_nivel","SEAD286PO":"riesgos_quimicos","CTRH0006":"principios_basicos_de_la_funcion","ADGD260PO":"tecnicas_de_reclutamiento_y_seleccion","ADGD335PO":"aprendizaje_digital_y_desarrollo","ADGG048PO":"metodologias_de_trabajo_itil_pmi_y_cmmi","IFCT068PO":"metodologias_agiles_en_proyectos_de","COML019PO":"organizacion_del_almacen","HOTT0005":"amadeus","SANT005PO":"asistencia_prehospitalaria_en_urgencias","SANT094PO":"tratamiento_de_trastornos_afectivos_y","SANP012PO":"enfermedades_emergentes_y_reemergentes","COML0006":"gestion_logistica","COML018PO":"funcion_logistica_y_optimizacion_de","COML024PO":"internacionalizacion_de_pymes_gestion","FMEM0004":"fundamentos_de_robotica","TMVI0027":"conduccion_de_remolques_y_semirremolques","COML009PO":"logistica_de_flotas_y_sistemas","COML010PO":"politica_y_gestion_informatizada_de","SANT090PO":"reanimacion_cardiopulmonar","COMM0109":"gestion_del_marketing_y_comunidades","ADGN144PO":"aspectos_legales_del_comercio","ADGD374PO":"motivacion_del_personal","ADGD114PO":"gesto_n_contable_general_y_de_costes_y","IFCT102":"ciberseguridad_en_el_teletrabajo","IFCT0138":"introduccion_al_big_data_e_inteligencia","COMT0095":"fundamentos_de_comercio_exterior_y","COML0047":"funcion_logistica_y_optimizacion_de","COML0045":"organizacion_del_almacen","COML0037":"logistica_de_flotas_y_sistemas","COML0043":"gestion_informatizada_de_stocks","SSCE34":"aplicacion_de_las_tic_a_la_formacion","SSCE32":"gamificacion_en_la_formacion_de","IFCT0169":"big_data_en_la_nube","COMM0078":"marketing_online_en_el_sector_de_la","COMM0066":"principios_del_plan_de_comunicacion_y","ADGD242PO":"seleccion_de_personal_on_line","IMAR17":"mantenimiento_y_conservacion_de","ENAE002PO":"instalaciones_de_energia_eolica","ARGG0016":"diseno_asistido_autocad_3d","MF1023_3":"fomento_y_apoyo_asociativo","MF0225_3":"gestion_de_bases_de_datos","MF1972_3":"aspectos_ambientales_de_la_organizacion","MF0239_2":"operaciones_de_venta","MF1001_3":"gestion_de_la_fuerza_de_ventas_y","MP0421":"modulo_de_practicas_profesionales_no","MF1014_3":"organizacion_de_almacenes","MF0950_2":"construccion_de_paginas_web","MF1002_2":"ingles_profesional_para_actividades","IFCD009PO":"gestion_de_contenidos_digitales","SSCB012PO":"monitor_de_tiempo_libre","SSCE026PO":"creacion_de_contenidos_digitales_mobile","SSCE070PO":"evaluacion_en_la_formacion","SSCE071PO":"experto_en_e_learning","SSCE074PO":"formacion_de_formadores","SSCE102PO":"las_tic_en_la_ensenanza","SSCG051PO":"lengua_de_signos","HOTR0003":"cocteleria","HOTR0041":"cocina_italiana","HOTR0008":"cocina_basica","HOTR0013":"cocina_creativa_y_de_autor","HOTR0016":"cocina_vegetariana_en_restauracion","HOTT0009":"animacion_turistica","SANP0003":"alergias_e_intolerancias_alimenticias","ADGG06":"digitalizacion_y_rrss_como_estrategia","HOTR0026":"el_servicio_de_comidas_en_centros","HOTR0056":"ingles_restauracion","IMST0002":"fotografia_gastronomica","HOTR0033":"planificacion_de_menus_y_dietas","HOTR0038":"pasteleria_postres_para_restauracion","INAD0001":"manipulacion_en_crudo_y_conservacion_de","SANP0005":"nutricion_y_dietetica","SEAD0001":"prevencion_de_riesgos_laborales_en","SSCG0096":"estimulacion_cognitiva","SSCG0088":"adolescentes_e_intervencion","SSCE0176":"animacion_a_la_lectura","SANT0109":"atencion_temprana_al_paciente","SSCE0072":"inteligencia_emocional_en_la_docencia","SSCE0128":"atencion_al_alumnado_con_necesidades","SSCG0089":"herramientas_de_orientacion_y_mediacion","SSCG0099":"el_espectro_autista_y_sindrome_de","SSCE0145":"gestion_de_sistemas_e_learning","SSCE0147":"evaluacion_de_las_competencias","SSCG0083":"acoso_y_violencia_escolar","SSCE0146":"evaluacion_en_la_formacion","SSCE0182":"creacion_de_contenidos_digitales_mobile","SSCE0084":"las_tic_en_la_ensenanza","HOTR0011":"cocina_para_restauracion_colectiva_i","HOTR0031":"esculpido_de_frutas_y_verduras","HOTR35":"nuevas_tecnicas_de_limpieza_y","SANP0004":"menus_para_dietas_especiales","HOTR0044":"preparacion_de_buffet","INAD0004":"higiene_en_comedores_escolares","MF0490_3":"gestion_de_servicios_en_el_sistema","MF1017_2":"intervencion_en_la_atencion_higienico","SANT10":"atencion_integral_en_catastrofes","TMVI0021":"prevencion_de_riesgos_laborales_en_la","TMVI0014":"tacografo_digital","IFCT0509":"administracion_de_servicios_de_internet","IFCD0210":"desarrollo_de_aplicaciones_con","MP0175":"seguridad_informatica","MF0487_3":"auditoria_de_seguridad_informatica","MF0488_3":"gestion_de_incidentes_de_seguridad","INAD065PO":"planes_de_seguridad_del_agua","ADGD345PO":"novedades_en_la_seguridad_de_los_datos","ELEE024PO":"compras_de_energia","ENAA0001":"calculo_de_la_huella_de_carbono_en_el","ENAA026PO":"eficiencia_energetica_en_el_ciclo","FMEM022PO":"hidraulica_basica","SEAG074PO":"gestion_medioambiental_en_empresas_del","COMT095PO":"tecnicas_de_ventas_en_estaciones_de","ENAA0005":"manipulacion_de_aguas_de_consumo_publico","ENAE0008":"produccion_transporte_almacenaje_y","IFCT159":"introduccion_al_big_data_e_inteligencia","SSCE0003":"acompanante_de_transporte_escolar","SEAG028PO":"gestion_integral_de_residuos","SANT0160":"asistencia_prehospitalaria_en_urgencias","ELEQ001PO":"dispositivos_y_circuitos_electricos","SEAG012PO":"control_integral_de_la_contaminacion","SEAG027PO":"gestion_de_residuos_peligrosos","ENAC010PO":"parametros_economicos_rentables_en","EOCO010PO":"interpretacion_de_planos","EOCO012PO":"introduccion_a_la_gestion_integral_del","IMAI017PO":"mantenimiento_electrico_y_mecanico_de","SEAD149PO":"medidas_de_ruidos_prevencion_y","ENAC16":"fundamentos_de_eficiencia_energetica","ENAC17":"fundamentos_de_eficiencia_energetica","EOCB002PO":"instalacion_de_prefabr_ligeros_para_la","EOCO029PO":"conservacion_de_carreteras_coex","IMAI013PO":"instalacion_de_climatizacion_eficiente","SEAD113PO":"manipulacion_de_sustancias_toxicas","TMVG005PO":"dispositivos_de_seguridad_en_el","ADGD347PO":"programa_avanzado_agile_project","ADGG02":"nuevos_entornos_con_microsoft_365","ELEE006PO":"elementos_electricos_en_las_maquinas","ELEE016PO":"domotica_y_hogar_digital_tecnologias_y","ADGG069PO":"project_management_certificaciones","ELEE013PO":"normas_de_operacion_de_las_redes_de","ELEE022PO":"operacion_y_control_del_sistema","SEAD0221":"medidas_preventivas_en_trabajos_en","MAMD02":"visualizacion_de_prototipos_mediante","EOCO0110":"interpretacion_y_visualizacion_de","EOCO0080":"fundamentos_de_la_metodologia_bim","ENAC0005":"eficiencia_energetica_en_la_industria","FMEC013PO":"soldadura_mag","FMEC014PO":"soldadura_mig","FMEC015PO":"soldadura_tig","FMEM0021":"soldadura_por_electrodo_revestido_smaw","ENAE017PO":"instalacion_y_mantenimiento_de_placas","COML0309":"organizacion_y_gestion_de_almacenes","IFCT0109":"seguridad_informatica","SEAG0211":"gestion_ambiental","IMAR002PO":"instalaciones_de_calefaccion","IFCT115":"seguridad_y_privacidad_de_los_jovenes","MF1973_3":"sistemas_de_gestion_ambiental","MF0137_3":"seguimiento_del_proceso_de_insercion","ELEE031PO":"seguridad_en_las_instalaciones","EOCO0098":"calculo_y_diseno_de_estructuras_bajo","ELEQ0003":"automatizacion_programable_i","SSCS0208":"atencion_sociosanitaria_a_personas","MF1018_2":"intervencion_en_la_atencion","MF0257_1":"servicio_basico_de_restaurante_bar","SSCE33":"lenguaje_no_sexista_para_la_igualdad_de","EOCO0078":"aplicacion_practica_de_la_metodologia","SSCE0166":"coordinacion_de_proyectos_pedagogicos_y","MF1425_2":"manejo_de_herramientas_tecnicas_y","MP0416":"modulo_de_practicas_profesionales_no","MF1006_2":"ingles_profesional_para_logistica_y","MF1213_3":"instalacion_y_configuracion_de_sistemas","MF1016_2":"apoyo_en_la_organizacion_de","SEAG0026":"manejo_de_productos_sustancias_y","SSCI009PO":"limpieza_en_centros_escolares","SEAD221PO":"equipos_de_proteccion_individual_epi","SSCI003PO":"coordinacion_de_equipos_de_limpieza","SEAG039PO":"limpieza_gestion_de_residuos_y","SEAG054PO":"tratamiento_de_residuos_y_reciclaje","IFCT0024":"ciberseguridad_para_usuarios","ADGG029PO":"gestion_documental_y_archivos","SSCI0031":"coordinacion_de_equipos_de_limpieza","SSCI0029":"limpieza_e_higienizacion","SSCI0034":"tecnicas_de_limpieza_y_desinfeccion","MF1154_1":"instalacion_de_tuberias","MF0120_2":"montaje_y_mantenimiento_de","MF0121_2":"montaje_y_mantenimiento_de","MF1155_1":"instalacion_y_mantenimiento_de","MF1561_1":"operaciones_auxiliares_en_el","MP0090":"modulo_de_practicas_profesionales_no","MP0093":"modulo_de_practicas_profesionales_no","MF0835_2":"replanteo_de_instalaciones_solares","MF0836_2":"montaje_de_instalaciones_solares","MF0837_2":"mantenimiento_de_instalaciones_solares","ELEE0108":"operaciones_auxiliares_de_montaje_de","ENAE0508":"organizacion_y_proyectos_de","ENAE0308":"organizacion_y_proyectos_de","ENAE0108":"montaje_y_mantenimiento_de","MF0820_2":"instalaciones_electricas_en_edificios","MF1559_1":"operaciones_de_ensamblado_en_el_montaje","INAD001PO":"aditivos_alimentarios","INAD003PO":"envasado_de_productos_alimentarios","INAF021PO":"elaboracion_de_bizcochos_galletas_y","INAD031PO":"metodos_de_conservacion_de_los_alimentos","ADGD095PO":"escandallos","INAD004PO":"mermas_en_alimentacion","INAF0009":"elaboracion_de_productos_salados_de","INAF018PO":"elaboracion_de_panes_para_la","INAF023PO":"elaboracion_de_masas_cremas_y_bases_en","IMAI0003":"fontaneria","IFCD0110":"confeccion_y_publicacion_de_paginas_web","MF2187_3":"gestion_de_eventos_de_marketing_y","MF2189_3":"elaboracion_de_materiales_de_marketing","MF1333_1":"aprovisionamiento_interno_y","MF0951_2":"integracion_de_componentes_software_en","MP0278":"modulo_de_practicas_profesionales_no","MP0029":"formacion_en_empresa_u_organismo","IMSV0209":"desarrollo_de_productos_audiovisuales","ELES0209":"montaje_y_mantenimiento_de_sistemas_de","MF0943_3":"proyectos_audiovisuales_multimedia","MF0944_3":"generacion_y_adaptacion_de_los","MF0946_3":"evaluacion_del_prototipo_control_de","MF0361_2":"atencion_sanitaria_inicial_a_multiples","ARGA0002":"autocad_2d","ADGD27":"programa_avanzado_en_proyectos","IFCD004PO":"analisis_y_programacion_en_java","IFCM037PO":"herramientas_google","SEAD098PO":"gestion_del_estres_en_la_atencion","IFCT047PO":"elaboracion_de_contenidos_multimedia","SANT107PO":"primeros_auxilios_y_soporte_vital","SEAD006PO":"actualizacion_vigilante_de_seguridad","SEAD061PO":"escolta_privado","SEAD062PO":"especialista_en_scanner","SEAD239PO":"seguridad_en_entidades_bancarias_y","SEAD25":"actividades_de_seguridad_en_central","SSCG0090":"ciberbullying","SANP0029":"nutricion_y_dietetica_en_ninos_ninas_y","ADGD178PO":"mediacion_y_resolucion_de_conflictos","ELEQ0009":"automatas_programables","IMAI025PO":"reparacion_de_calderas_calentadores_y","COMM02":"analitica_web","COMM0122":"marketing_digital_diseno_web","ADGG0022":"analisis_visualizacion_y_automatizacion","ADGG102PO":"business_intelligence","SEAG026PO":"gestion_de_residuos_industriales","IMAI032PO":"operador_centrales_de_alarma","SEAD289PO":"defensa_personal","COMT069PO":"fundamentos_de_negociacion_comercial","ENAE014PO":"la_energia_solar_en_el_panorama","CTRD0062":"marketing_comercio_electronico_y_medios","COMM0099":"marketing_online","ADGG10":"visualizacion_de_datos_con_power_bi","IFCT048PO":"aplicaciones_con_android_y_html_5","IFCT055PO":"gestion_de_proyectos_de_desarrollo_de","SEAD0167":"c_29_operarios_de_plataformas_elevadoras","COMV0108":"actividades_de_venta","MF1005_3":"optimizacion_de_la_cadena_logistica","ITIFC0008":"introduccion_al_big_data_y_la_ia","IFCD88":"google_analytics_y_google_metatags","ADGN0012":"analisis_de_estados_financieros","ADGN29":"inteligencia_artificial_y_sector","COMM0123":"marketing_distribucion_comercial_y","MP0558":"practicas_no_laborales","MF0080_2":"vigilancia_y_proteccion_en_seguridad","MF0082_2":"vigilancia_transporte_y_distribucion_de","IFCT0609":"programacion_de_sistemas_informaticos","MF0486_3":"seguridad_en_equipos_informaticos","ELEM0110":"desarrollo_de_proyectos_de_sistemas_de","FMEC0209":"diseno_de_tuberia_industrial","SSCI004PO":"formacion_basica_para_limpiezas","ADGD149PO":"habilidades_sociales_comunicacion","ADGD236PO":"negociacion_y_resolucion_de_conflictos","FCOO03":"insercion_laboral_sensibilizacion","SSCB010PO":"ludotecas_organizacion_y_atencion_al","SEAD069PO":"f_e_v_s_servicio_de_vigilancia_en","SEAD131PO":"planificacion_direccion_y_gestion_de_la","ADGD29":"ley_de_igualdad_y_violencia_de_genero","IFCT109":"gestion_de_la_ciberseguridad","SEAD290PO":"primeros_auxilios_en_seguridad_privada","TMVI060PO":"adr_transporte_de_mercancias_peligrosas","TMVI0006":"formacion_continua_de_conductores_parte","SEAD0193":"aspirante_a_vigilante_de_seguridad","SSCB0012":"tecnicas_y_habilidades_en_la_educacion","SANT0152":"soporte_vital_basico_y_desfibrilador","FCOS02":"basico_de_prevencion_de_riesgos","ENAE0025":"energia_solar_fotovoltaica","IFCT0108":"operaciones_auxiliares_de_montaje_y","MF0245_3":"gestion_de_quejas_y_reclamaciones_en","COMT0411":"gestion_comercial_de_ventas","MF1313_1":"limpieza_de_espacios_abiertos","AGAJ004PO":"operaciones_generales_de_jardineria","SSCI010PO":"limpieza_en_domicilio","SEAD179PO":"prl_para_personal_de_mantenimiento","COMT0048":"venta_online","COML0008":"conduccion_de_carretillas_elevadoras","ADGD0024":"impuesto_sobre_el_valor_anadido_iva","ADGD041PO":"contabilidad_superior_de_seguros","ADGN017PO":"avanzado_en_seguros_conocimiento_del","ADGN033PO":"direccion_financiera","ADGN055PO":"gestion_de_entidades_financieras","ADGN083PO":"mercados_financieros_en_entornos","ADGN091PO":"planificacion_financiera_europea_efpa","ADGN096PO":"regulacion_de_pagos_creditos_prestamos","ADGN119PO":"sistema_economico_financiero","SANS0001":"metodologia_de_la_investigacion","SANT023PO":"cuidados_auxiliares_basicos_en","ADGD005PO":"adjunto_a_la_direccion","ITADG0009":"operaciones_de_riesgo","ITADG0003":"direccion_de_equipos_virtuales","ADGN26":"atencion_al_consumidor_vulnerable_y","ADGN089PO":"operaciones_de_riesgo_nivel_ii","ADGN088PO":"operaciones_de_riesgo_nivel_i","ADGN03":"marketing_de_productos_aseguradores_y","IFCD0206":"desarrollo_de_aplicaciones_moviles_con","IFCD0179":"wordpress","ELES0110":"desarrollo_de_proyectos_de","ADGD0210":"creacion_y_gestion_de_microempresas","MF1019_2":"apoyo_psicosocial_atencion_relacional_y","MF1034_3":"gestion_de_recursos_laborales","MP0193":"modulo_de_practicas_profesionales_no","SANP009PO":"dermofarmacia_y_cosmetologia","SANT024PO":"cuidados_auxiliares_de_enfermeria_en","HOTR0408":"cocina","HOTR0109":"operaciones_basicas_de_pasteleria","AGAJ010PO":"realizacion_de_composiciones_florales","COMM091PO":"social_media_marketing_y_gestion_de_la","COMM14":"big_data_y_transformacion_digital","COMM013PO":"decoracion_en_tiendas_y_escaparates","COMM022PO":"diseno_del_montaje_de_escaparates","COMT017PO":"fundamentos_para_la_creacion_de_tiendas","COMT054PO":"habilidades_sociales_de_atencion_al","ADGG035PO":"herramientas_en_internet_comercio","COMM052PO":"marketing_en_la_actividad_comercial","COMM123PO":"neuromarketing","COMT027PO":"negocios_online_y_comercio_electronico","ADGD366PO":"modelos_de_escrituras","ADGD78":"igualdad_de_oportunidades_objetivos_y","IFCT103":"ciberseguridad_prevencion_analisis_y","COMM0011":"tienda_virtual_y_gestion_del_comercio","ADGD211PO":"posicionamiento_en_buscadores","COMM0082":"proyectos_de_decoracion_comercial","COMT0058":"habilidades_de_comunicacion_con_la","COMM27":"digital_marketing_automation_marketing","ITTMV0001":"cualificacion_inicial_acelerada_de","TMVI0013":"formacion_para_el_acceso_a_las_pruebas","TMVI57":"programa_de_formacion_continua_cap_para","COMM0014":"neuromarketing","COMT0099":"psicologia_y_habilidades_sociales","COMM0086":"espacios_y_decoracion_comercial","SSCG0109":"insercion_laboral_de_personas_con","SSCG0209":"mediacion_comunitaria","MF0503_3":"promociones_en_espacios_comerciales","INAD035PO":"normativa_de_calidad_alimentaria_brc","INAE005PO":"seguridad_alimentaria_en_la_industria","INAD027PO":"materias_primas_en_la_industria_de_la","INAD029PO":"limpieza_y_desinfeccion_en_la_industria","INAD032PO":"microbiologia_de_los_alimentos","INAD033PO":"microbiologia_de_los_lacteos","INAF016PO":"panaderia_nutricion_y_dietetica_del_pan","SEAG031PO":"sistema_de_gestion_medioambiental_en_la","INAD026PO":"iso_22000_2005_para_la_gestion_de_la","INAF0005":"masas_madre_natural_en_panaderia_y","INAF0007":"aplicacion_de_tecnicas_de_elaboracion","INAF001PO":"elaboracion_de_bolleria_y_pasteleria","INAF006PO":"elaboracion_de_panes_para_hosteleria","INAF014PO":"cata_de_pan","INAF022PO":"elaboracion_de_bombones","INAH001PO":"elaboracion_cata_maridaje_y","INAF007PO":"elaboracion_de_productos_de_bolleria","MF0251_2":"apoyo_domiciliario_y_alimentacion","INAF013PO":"panaderia_y_pasteleria_salada","ADGD54":"transformacion_y_capacitacion_digital","COMT14":"prospeccion_comercial_y_planificacion","COMM014PO":"decoracion_y_escaparatismo","COMM124PO":"analitica_web_en_el_sector_comercio","ITCOM0010":"posicionamiento_web","MF1584_3":"deteccion_prevencion_y_acompanamiento","SSCS0108":"atencion_sociosanitaria_a_personas_en","MF0249_2":"higiene_y_atencion_sanitaria","MF0250_2":"atencion_y_apoyo_psico_social_en","MP0028":"modulo_de_practicas_profesionales_no","ADGG_ITI03":"fulles_de_calcul_basic","FCOI13":"iniciacio_a_la_informatica_i_en","ADGD0046":"contabilidad_informatizada","ADGD0308":"actividades_de_gestion_administrativa","ADGG0208":"actividades_administrativas_en_la","ADGG0308":"asistencia_documental_y_de_gestion_en","ADGG0408":"operaciones_auxiliares_de_servicios","ADGG0508":"operaciones_de_grabacion_y_tratamiento","COML0110":"actividades_auxiliares_de_almacen","SANT0108":"atencio_sanitaria_a_multiples_victimes","MF0969_1":"tecnicas_administrativas_basicas_de","MF0970_1":"operaciones_basicas_de_comunicacion","FCOV05":"comunicacio_a_llengues_estrangeres","FCOV06":"comunicacio_a_llengues_estrangeres","FCOV24":"comunicacio_en_llengua_catalana_n2","FCOV25":"comunicacio_en_llengua_catalana_n3","CTRD0013":"lordinador_i_les_gestions_per_internet","FCOI02":"alfabetizacion_informatica_informatica","CTRO0018":"estrategies_per_a_la_millora_de","FCOO04":"foment_i_promocio_del_treball_autonom","FC01_FCOS02_202367":"fcos02_2023_basic_de_prevencio_de","FC01_CTRL0040_202466":"catala_a1_catala_nivell_inicial_a1","FC01_SSCE05_01_202367":"angles_c_1_a","FC01_SSCE05_02_202367":"angles_c_1_b","FC01_SSCE05_03_202367":"ssce05_03_2023_angles_c_1_c","FC01_SSCE05_04_202367":"ssce05_04_2023_angles_c_1_d","FC00_B_SSCG0111_MF142368":"atencio_i_gestio_de_trucades_entrants","FC00_B_SSCG0111_MF142468":"emissio_i_gestio_de_trucades_sortints","FC00_B_SSCG0111_MF142568":"maneig_de_les_eines_tecniques_i","FC00_B_COML0110_MF043268":"manipulacio_de_carregues_amb_carretons","FC00_B_COML0110_MF132568":"operacions_auxiliars_d_emmagatzematge","FC00_B_COML0110_MF132668":"preparacio_de_comandes","FC00_B_ADGD0308_MF023369":"ofimatica","FC00_B_ADGD0308_MF098069":"b_adgd0308_mf0980_gestio_auxiliar_de","FC00_B_ADGD0308_MF098169":"b_adgd0308_mf0981_registres_comptables","FC00_B_SANT0108_MF007269":"b_sant0108_mf0072_tecniques_de","FC00_B_SSCS0208_MF101669":"b_sscs0208_mf1016_suport_en_l","FC00_B_SSCS0208_MF101769":"intervencio_en_l_atencio","FC00_B_SSCS0208_MF101869":"intervencio_en_l_atencio_sociosanitaria","FC00_B_SSCS0208_MF101969":"b_sscs0208_mf1019_suport_psicosocial","FC00_PFE_SSCS0208_MP002969":"pfe_sscs0208_periode_de_formacio_en","FC00_PFE_COML0110_MP028768":"pfe_coml0110_periode_de_formacio_en","FC00_PFE_SSCG0111_MP041668":"pfe_sscg0111_periode_de_formacio_en","FC00_C_SANT020868":"trasllat_sanitari","TMVI30":"formacio_en_materia_subjeccio_de","TMVI28":"formacio_en_materia_de_proteccio_dels","TMVI31":"formacio_sobre_tacograf_digital","TMVI20":"qualificacio_inicial_accelerada_de","CTRR0011":"reciclatge_de_primers_auxilis","FCOI10":"cerca_i_gestio_de_la_informacio_digital","CTRE0002":"emprenedoria","CTRG0007":"principios_basicos_de_la_inteligencia","CTRI0004":"elaboracio_i_implementacio_de_plans_d","CTRL0022":"angles_conversacional_avancat","CTRL0023":"ingles_conversacional_intermedio","CTRL0024":"presentacions_orals_tecniques_en_angles","CTRL0041":"catala_a2_1_catala_basic_1","CTRL0042":"catala_a2_2_catala_basic_2","CTRL0043":"catala_a2_3_catala_basic_3","CTRP0005":"coaching_de_fortaleses","CTRP0006":"mindfulness","CTRP0012":"eines_de_coaching_nivell_i","CTRP0014":"eines_de_coaching_nivell_ii","CTRR0008":"primers_auxilis_basics","FCOI11":"cerca_i_gestio_de_la_informacio_digital","FCOI18":"comunicacio_i_col_laboracio_amb_eines","FCOI19":"comunicacio_i_col_laboracio_amb_eines","FCOI21":"resolucio_de_problemes_a_l_entorn","FCOI22":"resolucio_de_problemes_a_l_entorn","FCOI24":"seguretat_i_civisme_a_l_entorn_digital","FCOI25":"seguretat_i_civisme_a_l_entorn_digital","SANT0041":"primers_auxilis_socorrisme_i","SSCE0110":"habilitacion_para_la_docencia_en_grados","ARGN004PO":"diseno_de_productos_editoriales","IFCD0094":"inteligencia_artificial_aplicada_a_la","IFCD052PO":"programacion_en_java","IFCT103PO":"servidores_web","MF1866_2":"actividades_de_educacion_en_el_tiempo","MF0232_3":"auditoria","MF0231_3":"contabilidad_y_fiscalidad","MF1445_3":"evaluacion_del_proceso_de_ensenanza","MF1444_3":"imparticion_y_tutorizacion_de_acciones","MF0233_2":"ofimatica","MF1446_3":"orientacion_laboral_y_promocion_de_la","MF1867_2":"procesos_grupales_y_educativos_en_el","MF1442_3":"programacion_didactica_de_acciones","MF1443_3":"seleccion_elaboracion_adaptacion_y","MF1868_2":"tecnicas_y_recursos_de_animacion_en","IFCT101":"business_intelligence_y_transformaci_n","SANT0096":"cuidados_de_la_persona_anciana_con","SANT0094":"deteccion_y_abordaje_de_la_violencia_de","IMSV0079":"diseno_de_objetos_y_entornos_para","IMSV0078":"diseno_de_personajes_para_producciones","ARGG0012":"diseno_grafico_vectorial_con_adobe","HOTR0053":"elaboraciones_b_sicas_para_pasteler_a","SANT0196":"enfermedades_emergentes_y_reemergentes","ADGD0075":"experto_en_sostenibilidad_y","ADGD0065":"gestion_agil_de_procesos","IFCT052PO":"gestion_de_sistemas_con_vmware","IFCD029PO":"ingenier_a_de_software_avanzada","SSCB0013":"la_organizacion_y_la_atencion_a_la","CTRL0035":"lengua_castellana_para_la_integracion","ADGG0010":"operaciones_auxiliares_en_el","IFCT078PO":"patrones_software","ARGG014PO":"photoshop_basico","IFCT0033":"proteccion_de_equipos_ante_los_riesgos","SANT0079":"actuacion_del_celador_en_los_servicios","SSCG0028":"atencion_al_enfermo_de_alzheimer","IMSV0006":"creacion_de_videos_para_publicidad","SANT026PO":"cuidados_auxiliares_de_enfermer_a_en_el","ADGD094PO":"equipos_efectivos_y_creatividad","SSCG055PO":"mediador_intercultural","COMT08":"planificacion_del_aprovisionamiento_y","ADGN094PO":"programa_delt_gestion_de_accidentes_de","ADGG070PO":"redaccion_y_presentaci_n_de_informes","SSCG0037":"soporte_en_actividades_de_prevencion_y","ARGN0003":"tecnicas_de_edicion","MF1870_3":"coordinacion_y_dinamizacion_del_equipo","MP0353":"formacion_en_empresa_u_organismo","MP0410":"formacion_en_empresa_u_organismo","MF1869_3":"planificacion_organizacion_gestion_y","ADGG001PO":"access_nivel_avanzado","INAD0009":"alergias_e_intolerancias_alimentarias","SSCE0030":"ciberbullying_y_la_intervencion","IFCT104":"ciberseguridad_para_microempresas","SANT0190":"cuidados_y_terapias_naturales","SSCG0038":"deteccion_y_actuacion_ante_los_malos","ADGD067PO":"direccion_de_equipos_y_coaching","ADGD068PO":"direccion_de_personas_y_desarrollo_del","ADGD096PO":"escucha_activa_empatia_y_asertividad","ADGD032PO":"fundamentos_del_coaching_y_orientacion","ADGG0012":"gamificacion_nuevas_tecnicas_de","ADGD137PO":"gestion_empresarial","CTRP0008":"habilidades_de_comunicacion","IFCD083PO":"informatica_forense_y_ciberseguridad","SSCE0101":"intervencion_en_el_fracaso_escolar","ADGD175PO":"ley_de_proteccion_de_datos_lopd","ADGG052PO":"office_word_excel_access_y_power_point","ADGG053PO":"ofimatica","IFCT101PO":"planificacion_de_la_seguridad_inform","ADGG063PO":"power_point_presentaciones_graficas","ADGG087PO":"project_managment_gestion_integrada_de","CTRC0001":"resolucion_de_conflictos","IFCM026PO":"seguridad_informatica_y_firma_digital","ADGD024PO":"sensibilizacion_a_la_calidad_total_iso","ADGD250PO":"sistema_de_i_d_i_y_gestion_de_la","SANT0164":"tecnicas_de_rehabilitacion_psicosocial","SANT0193":"tratamiento_de_trastornos_afectivos_y","ADGG084PO":"word_nivel_avanzado","MF1010_3":"ingles_profesional_para_comercio","SSCE128PO":"tecnicas_de_busqueda_de_empleo","TUT":"tutorias_de_orientacion_individuales","MF0973_1":"grabacion_de_datos","MP0110":"operaciones_de_grabacion_y_tratamiento","MF0971_1":"reproduccion_y_archivo","MF0974_1":"tratamiento_de_datos_textos_y","COMM0112":"gestion_de_marketing_y_comunicacion","SSCB0211":"direccion_y_coordinacion_de_actividades","COML0209":"organizacion_del_transporte_y_la","CTRL0033":"espanol_nivel_b1","FCOE02":"atencion_al_cliente_en_ingles_en_el","HOTR0508":"servicios_de_bar_y_cafeteria","IFCT0310":"administracion_de_bases_de_datos","MF1437_3":"lengua_de_signos_espanola","MF1447_3":"sensibilizacion_y_formacion_sobre_la","MP0495":"promocion_y_participacion_de_la","COMT0211":"actividades_auxiliares_de_comercio","HOTA0108":"operaciones_basicas_de_pisos_en","ADGD0208":"gestion_integrada_de_recursos_humanos","SANP034PO":"salud_nutricion_y_dietetica","ADGG27":"procedimientos_basicos_en_servicios","HOTR064PO":"servicio_en_restaurante_y_bares","HOTR043PO":"ingles_restauracion","SSCG04":"atencion_integral_y_centrada_en_la","SSCE163PO":"curso_para_el_tutor_de_empresa_en_la_fp","SSCE162PO":"curso_para_el_tutor_de_empresa_en_la_fp","SANS007PO":"interpretacion_de_resultados_de","ADGG0011":"actividades_basicas_de_atencion_al","IFCD17":"fundamentos_y_administracion_de_oracle","ADGD14":"venta_online_en_la_empresa_rrss_y","HOTR11EXP":"cocteleria","COMM0001":"automatizacion_del_marketing_y_crm","MF0978_2":"gestion_de_archivos","MF0977_2":"lengua_extranjera_profesional_para_la","MP0079":"modulo_de_practicas_profesionales_no","MF0976_2":"operaciones_administrativas_comerciales","MF0975_2":"tecnicas_de_recepcion_y_comunicacion","HOTR0509":"reposteria","SSCE06":"aleman_a1","SSCE07":"aleman_a2","ABC-ED":"atencion_basica_al_cliente_ed_01_25","SSCG0017OV":"atencion_sociosanitaria_a_personas_en","COMT0110":"atencion_al_cliente_consumidor_o_usuario","FCOD0056OH":"malditas_reuniones_como_hacerlas_mas","SSCG002PO":"acompanamiento_en_la_muerte_counselling","IFCP0001OH":"adobe_muse_disena_sitios_web_sin","FCOS0046HV":"alimentacion_saludable","IFCT01":"analista_de_big_data_y_cientifico_de","SSCE0002OH":"aprender_a_defenderse_la_autodefensa","FCOD0082HV":"aprender_a_silenciar_la_mente_y_calmar","SSCG0029":"atencion_a_personas_enfermas_con","COMM0098HV":"atencion_al_cliente_como_estrategia_de","COMM0082HV":"atraer_y_mantener_clientes_con","SSCE0003OH":"autocuidado_y_manejo_del_estres","IFCT0022":"big_data","IFCI0009OH":"big_data_analisis_y_visualizacion_de","COML0038HV":"certificado_profesional_pilotaje_de","IFCI0146HV":"chatgpt_y_otras_herramientas_de","IFCT144":"ciberinteligencia_en_materia_de","ADGA0009OH":"coaching_de_equipos","FCOD0006OH":"combatir_el_estres_y_mejorar_la","IFCI0041HV":"community_manager","IFCD0003HV":"como_mejorar_tu_productividad_personal","COMV0013HV":"cro_optimizar_la_conversion_en_tu_web_o","SSCS0035HV":"cuidados_paliativos","SSCE0120HV":"danza_y_movimiento_conecta_equilibra_y","FCOD0117HV":"descubre_tu_ikigai","SSCS0005OH":"deteriorio_mental_en_la_vejez_alzheimer","SSCE0093HV":"drones_como_herramienta_audiovisual","FCOR0017OH":"estrategias_para_trabajar_con_personas","COMP0011HV":"fotografia_con_movil_para_vender_en","FCOD0147HV":"gestion_de_la_ciberseguridad_en_pymes","FCOS0017HV":"gestion_del_estres_con_yoga_nivel_1","FCOS0027HV":"gestion_del_estres_con_yoga_nivel_2","FCOS0028HV":"gestion_del_estres_con_yoga_nivel_3","FCOS0079HV":"habilitacion_de_vigilante_de_seguridad","SSCF0004OH":"hablar_en_publico_como_quitar_el_miedo","FCOD0045OH":"hablar_en_publico_generando_impacto","IFCD0040OH":"herramientas_web_3_0_aplicacion_en_tu","FCOS0073HV":"higiene_postural_y_espalda_sana","IFCT143":"ingenieria_social_phishing_y_hacking_web","SSCE0014OH":"la_autodefensa_como_respuesta_a_la","SSCE0015OH":"la_autodefensa_como_respuesta_a_la","IFCM012PO":"la_firma_digital","SSCG0010OH":"lengua_de_signos_i","SSCG0031HV":"lengua_de_signos_ii","IFCM0003OH":"linkedin_multiplica_las_oportunidades","IFCI0026HV":"mailchimp_mails_masivos_y_canva","COMM0040HV":"marketing_en_instagram_marketing_a","FCOD0134HV":"mejore_sus_presentaciones_y","IFCT0064":"metaverso_como_realidad_alternativa","FCOV0026HV":"mindfulness","SSCF0007HV":"mindfulness","FCOS0012OH":"mindfulness_y_gestion_del_estres","ADGA0099HV":"mindfulness_comunicacion_consciente","FCOD0150HV":"nutricion_y_dietetica","IFCI0046OH":"ofimatica_office_365","FCOS0063HV":"primeros_auxilios_y_desa","FCOD0016HV":"proactividad_y_positividad_claves_para","COMM0058HV":"redes_sociales_como_herramienta_de","SSCB0004OH":"risoterapia","IFCT149PO":"seguridad_en_el_comercio_electronico","IFCI0064HV":"trafficker_digital_profesion_del_futuro","MF0228_3":"diseno_de_redes_telematicas","MF1007_3":"sistemas_de_informacion_de_mercados","SANP0009":"metabolismo_y_equilibrio_nutricional","SANS0002":"radiologia_pediatrica","SANT0095":"cuidados_auxiliares_enfermeria_en","SANT0098":"principios_dieteticos_aplicados_a_los","SANT0101":"cuidados_auxiliares_de_enfermeria_en","SANT0102":"cuidados_auxiliares_de_enfermeria_en_la","SEAG0007":"plan_de_gestion_intracentro_de_residuos","SEAG0014":"enfermeria_y_gestion_de_residuos","HOTT0032":"experiencias_digitales_inmersivas_en_el","MF0492_3":"programacion_web_en_el_entorno_servidor","MF0224_3":"administracion_de_sistemas_gestores_de","ENAE009PO":"diseno_y_montaje_de_instalaciones","SSCE002PO":"acreditacion_docente_para_teleformacion","COMC0002OV":"estrategias_digitales_de_cliente_y","COMM0013OV":"marketing_estrategico_y_transformacion","HOTA0003OV":"inteligencia_artificial_aplicada_a_la","ADGD103PO":"evaluacion_del_potencial_y_plan_de","FCOI07":"competencias_digitales_basicas_para_el","ADGG109PO":"notificacion_y_registro_electronico","HOTR0209":"sumilleria","ARGN010PO":"aplicaciones_de_diseno_grafico","ARGG017PO":"digitalizacion_de_imagenes","IFCM004PO":"especialista_en_seguridad_en_internet","SSCE123PO":"orientacion_socio_laboral_on_line","IMSV031PO":"retoque_fotografico","FCOI29":"teletrabajo_herramientas_y_rentabilidad","ADGD385PO":"introduccion_a_las_tecnicas_de","ADGG010PO":"comercio_electronico","ADGG025PO":"firma_electronica_las_nuevas","ARGG013PO":"photoshop_avanzado","COMM049PO":"tecnicas_de_marketing_on_line","ADGD0070":"contratacion_laboral","SSCG027PO":"actuaciones_frente_al_acoso_sexual","SSCG028PO":"difusion_y_sensibilizacion_en_materia","SSCG050PO":"la_igualdad_entre_hombres_y_mujeres_en","SSCG076PO":"violencia_de_genero","ADGD92":"contabilidad_general_sage_50_y","SSCE0212":"promocion_para_la_igualdad_efectiva_de","CIB":"ciberacoso_protegete_y_protege_a_tu","MAY":"mayores_tecnologia_para_una_vida","SMYT":"salud_mental_y_tecnologia","CHAT":"uso_practico_del_chatgpt_para_estudiar","IFCT121":"ciberseguridad_riesgos_y_amenazas_en_la","ADGD056PO":"creacion_de_empresas_on_line","ADGG017PO":"desarrollo_tic_para_la_fidelizacion_y","ARGG006PO":"diseno_asistido_por_ordenador_con","IFCT060PO":"introduccion_a_la_tecnologia_de","IMST014PO":"adobe_photoshop_aplicaciones_camara","IMST013PO":"photoshop","COMT035PO":"facturacion_electronica","ADGG117PO":"escribir_con_exito_y_de_manera","FCOA07":"sensibilizacion_en_materia_de","FCOI09":"iniciacion_a_la_aplicacion_de_las","ADGD169PO":"la_representacion_legal_de_los","ADGD170PO":"la_representacion_legal_de_los","CTRL0014":"aleman_basico","FCOV27":"competencias_clave_nivel_2_para","ADGD0108":"gestion_contable_y_gestion","ADGG0108":"asistencia_a_la_direccion","MF0498_3":"analisis_contable_y_presupuestario","MF0243_3":"financiacion_internacional","MF0242_3":"gestion_administrativa_del_comercio","MF0500_3":"gestion_de_tesoreria","MF0268_3":"gestion_de_unidades_de_informacion_y","MF1074_3":"informacion_turistica","MF0244_3":"medios_de_pago_internacionales","MF0247_3":"organizacion_del_trafico_de_mercancias","MF0248_3":"planificacion_del_trafico_de_mercancias","MF0267_2":"procesos_economico_administrativos_en","MF1075_3":"productos_y_servicios_turisticos_locales","MF0499_3":"productos_servicios_y_activos","MF0266_3":"promocion_y_venta_de_servicios","MF0980_2":"gestion_auxiliar_de_personal","MF0979_2":"gestion_operativa_de_tesoreria","MF0981_2":"registros_contables","SEAD097PO":"gestion_de_la_prl_en_pymes_y_micropymes","COMM0009":"atencion_al_cliente","AFDA0210":"acondicionamiento_fisico_en_sala_de","AFDA0511":"operaciones_auxiliares_en_la","AFDA0110":"acondicionamiento_fisico_en_grupo_con","MF0275_3":"actividades_de_acondicionamiento_fisico","MF1632_1":"asistencia_a_tecnicos_deportivos_en_la","MF1631_1":"asistencia_a_usuarios_y_control_de","MF0515_3":"coreografias","MF0516_3":"metodologia_y_practica_de","MF1633_1":"operaciones_preventivas_de_seguridad_en","MF0272_2":"primeros_auxilios","MF0274_3":"programacion_especifica_sep","MF0273_3":"valoracion_de_las_capacidades_fisicas","IMAQ0108":"mantenimiento_y_montaje_mecanico_de","ELEM0311":"montaje_y_mantenimiento_de_sistemas_de","FMEA14EXP":"ingles_tecnico_aeronautico","COMT092PO":"tecnicas_de_venta_personal_y","COMT09":"psicologia_aplicada_a_las_ventas","COMT10":"tecnicas_de_venta_en_el_comercio","EOCB0008":"preparacion_basica_para_actividades_de","AGAU0004":"manipulacion_y_aplicacion_de_productos","ADGD359PO":"lean_manufacturing","SSCE20":"competencias_digitales_para_formadores","ADGD151PO":"habilidades_sociales_de_comunicacion_y","COML20":"actividades_basicas_de_logistica_de","IMAI0011":"mantenimiento_de_instalaciones_y","COML03":"logistica_integral","ELEQ0111":"operaciones_auxiliares_de_montaje_y","IMAI0108":"operaciones_de_fontaneria_y_calefaccion","IFCT0210":"operacion_de_sistemas_informaticos","EOCO0029":"interpretacion_de_planos","MF1792_2":"gestion_de_la_prevencion_de_riesgos","IMPE0109":"bronceado_maquillaje_y_depilacion","IMPE0110":"masajes_esteticos_y_tecnicas","IMPE0210":"tratamientos_esteticos","MF0352_2":"asesoramiento_y_venta_de_productos_y","MF1250_3":"asesoria_en_cuidados_esteticos","MF1249_3":"asesoria_en_estilos_de_peinados_y_pelo","MF1251_3":"asesoria_en_vestuario_moda_y","MF0580_3":"bronceado_artificial","MF0581_3":"depilacion_del_vello_por_metodos","MF0789_3":"diagnostico_y_protocolos_para_masajes","MF0790_3":"drenaje_linfatico_estetico_manual_y","MF1253_3":"imagen_personal_y_comunicacion","MF1252_3":"imagen_personal_protocolo_y_usos","MF0065_2":"maquillaje_social","MF0063_3":"masaje_estetico_manual_y_mecanico","MF0791_3":"masajes_esteticos_con_tecnicas_por","MF0067_3":"micropigmentacion","MF1248_3":"proyectos_de_asesoria_de_imagen_personal","MF0792_3":"tecnicas_sensoriales_esteticas","CTRL0061":"lengua_de_signos_espa_ola_nivel_usuario","COMM04":"introduccion_a_la_inteligencia","ADGD82":"entorno_y_estrategia_en_la","COMT16":"procedimientos_basicos_en_la_atencion","IFCD26":"cms_y_e_commerce","HOTR0308":"operaciones_basicas_de_catering","IMPE0108":"servicios_auxiliares_de_estetica","ADGD02":"gestion_fiscal","IFCT066PO":"linux_profesional_avanzado","IFCD036PO":"metodologias_de_ingenierias_de_software","MF0982_3":"administracion_y_gestion_de_las","MF0986_3":"elaboracion_tratamiento_y_presentacion","MF0983_3":"gestion_de_reuniones_viajes_y_eventos","MF0241_2":"informacion_y_atencion_al_cliente","MF0984_3":"ingles_profesional_para_la_asistencia_a","MF0985_2":"lengua_extranjera_profesional_distinta","MF0246_3":"organizacion_de_un_sistema_de","ADGG006PO":"analisis_de_viabilidad_de_proyectos_en","SSCE0097":"atencion_a_la_diversidad_necesidades","SSCG01":"atencion_sociosanitaria_a_personas","IFCT0058":"cloud_computing_introducci_n_a_la","IFCD37":"desarrollo_de_aplicaciones_para","ADGD0032":"gestion_contable_fiscal_y_laboral","ADGN131PO":"gestion_de_contratos_con_el_sector","SSCG003PO":"acoso_escolar","SANT001PO":"actividades_de_fisioterapia_y","COMT06":"comportamiento_del_consumidor_y","ARGG030PO":"diseno_grafico_publicitario","IMST010PO":"diseno_y_animacion_con_flash_cs6","ADGN046PO":"fiscalidad_de_productos_financieros_y","ELEE003PO":"fundamentos_basicos_de_electricidad","ADGD0031":"gestion_de_recursos_humanos","ADGN068PO":"impuesto_sobre_sociedades_is_gestion","HOTT0015":"ingles_profesional_para_el_turismo","SSCE032PO":"metodologia_didactica","ADGD183PO":"motivacion_humana_en_los_grupos_de","COMM005PO":"perfil_y_funciones_del_gestor_de","IMSV024PO":"planificacion_de_medios_publicitarios","SEAG062PO":"tecnico_en_contaminacion_atmosferica_y","MP0078":"formacion_en_empresa_u_organismo","MF0237_3":"gestion_administrativa_de_las","MF0238_3":"gestion_de_recursos_humanos","MF0987_3":"gestion_de_sistemas_de_informacion_y","SSCG0005":"acompanamiento_al_proceso_de_duelo","SSCE0098":"aprendizaje_cooperativo_en_el_aula","SANT0147":"atencion_al_paciente_hospitalario","ADGD0064":"contabilidad_avanzada","ADGD088PO":"emprender_un_negocio","ADGD116PO":"gestion_de_compras_informatizada","ADGD144PO":"habilidades_comunicativas_ante","SSCG0006":"herramientas_de_intervecion_educativa","SSCG0013":"intervencion_socioeducativa_con","ADGD186PO":"negociacion_con_proveedores","ADGD224PO":"proyectos_europeos","SSCG0022":"tecnicas_de_acompanamiento_a_traves_del","SANT0194":"terapia_del_dolor","SANT0195":"trastornos_digestivos","ADGG020/21":"fundamentos_excel_excel_avanzado","IMPQ0208":"peluqueria","IMPP0108":"cuidados_esteticos_de_manos_y_pies","IMPQ0108":"servicios_auxiliares_de_peluqueria","SSCE0109":"informacion_juvenil","IMPQ01":"atencion_y_procedimientos_basicos_en","IMPE01":"atencion_y_procedimientos_basicos_en","IFCD47":"programacion_con_sql_y_bases_de_datos","IFCT56":"excel_avanzado_y_power_bi","FMEC0319_2":"soldadura_por_arco_con_electrodo","SSCB0209":"dinamizacion_de_actividades_de_tiempo","AFDA0311":"instruccion_en_yoga","SEAD003PO":"control_de_acceso_en_grandes_eventos","SEAD0224":"prevencion_de_riesgos_laborales_en","MDA":"manipulacion_de_alimentos","MF1327_1":"operaciones_auxiliares_en_el_punto_de","MF1328_1":"manipulacion_y_movimientos_con","MF1329_1":"atencion_basica_al_cliente","MP0406":"formacion_en_empresa","COMM0033":"revolucion_artificial_herramientas_de","COMM0036":"revolucion_artificial_marketing_en","COMM0037":"marketing_sostenible_y_responsable","COMM0042":"personalizacion_de_la_experiencia_del","COMT0013":"atencion_a_la_clientela_del_pequeno","IFCD64":"gestion_de_proyectos_de_implementacion","SEAG06":"el_residuo_plastico_de_rechazo_como","MF1004_3":"gestion_de_proveedores","MF1003_3":"planificacion_del_aprovisionamiento","IFCT38":"community_manager_herramientas","COMM41":"marqueting_a_cercadors_seo_sem_i","COMM06":"marketing_estrategico_digital","IFCT0021":"posicionamiento_web_y_marketing_digital","AFDP003PO":"actuaciones_en_primeros_auxilios","FCOL002PO":"espanol_elemental_para_extranjeros","FCOV31":"comunicacion_en_valenciano_n3","IFCD107":"especialista_en_inteligencia_artificial","SEAD128PO":"planes_de_emergencia_y_evacuacion_para","SEAD226PO":"proyectos_de_seguridad_contra_incendios","COMT031PO":"direccion_comercial_y_marketing","COMM053PO":"estrategias_de_planificacion_y","COMM025PO":"fundamentos_del_plan_de_marketing_en","COMM040PO":"gestion_del_marketing_2_0","COMM032PO":"gestion_del_marketing_y_la_fuerza_de","FCOE010PO":"italiano_a1_marco_comun_europeo","COMM031PO":"marketing_on_line_diseno_y_promocion_de","COMM046PO":"plan_de_marketing_directo_y","COMM024PO":"plan_de_marketing_para_emprendedores","COMM037PO":"planificacion_de_marketing","COMM041PO":"planificacion_del_marketing_de_servicios","COMM038PO":"segmentacion_y_sistema_de_informacion","ADGN125PO":"tesoreria","COMT099PO":"tienda_virtual_prestashop","FCOV29":"competencias_clave_nivel_3_para","COML0210":"gestion_y_control_del_aprovisionamiento","MF0358_2":"unas_artificiales","MF0357_2":"tecnicas_esteticas_para_el_cuidado_y","MF0349_2":"peinados_acabados_y_recogidos","IFCT017PO":"autocad","IFCD0072":"creacion_y_mantenimiento_de_paginas_web","ADGG24":"gestion_informatizada_de_ventas_con","ADGD56":"habilidades_para_la_transformacion","ADGD91":"liderazgo_digital","COMM061PO":"posicionamiento_en_la_web_para_el","SSCE22":"tutorizacion_en_teleformacion","ADGG022PO":"factura_digital","ADGG071PO":"redes_sociales_y_empresa","SSCE18":"gamificacion_y_gestion_de_recursos","ADGD372PO":"dirigir_equipos_de_trabajo_en_entornos","COMT116PO":"estrategias_b2b_y_venta_compleja_en_la","ADGD352PO":"transformacion_digital_de_la_empresa","COMT115PO":"e_business_desarrollo_de_negocio_on_line","FMEM009PO":"fundamentos_de_robotica","IFCT114":"proyectos_de_business_intelligence","COMM44":"monetizacion_de_contenidos","SSCE0023":"recursos_didacticos_especificos_de","FC0008":"creacion_y_gestion_de_la_marca_personal","ADGN16":"fiscalidad_en_las_pymes_y_uso_de","TMVI0016":"conduccion_eficiente","COMM0007":"preparacion_de_la_asistencia_a_eventos","CTRL0013":"italiano_basico","COMT0112":"actividades_de_gestion_del_pequeno","COMT0111":"gestion_comercial_inmobiliaria","FCOV26":"competencias_clave_nivel_2_para","MP0112":"operaciones_auxiliares_de_servicios","SEAD0212":"vigilancia_seguridad_privada_y","SEAD0112":"vigilancia_seguridad_privada_y","IFCT133":"consultor_sap_s4hana_finanzas","IFCT129":"consultor_sap_s4hana_gestion_de","ADGG01":"sap_logistica_de_produccion","MF0081_2":"proteccion_de_personas","AFDP002PO":"actuaciones_de_urgencia_y_primeros","IFCT049PO":"experto_en_virtualizaci_n_con_vmware_y","MP0557":"formacion_en_empresa_u_organismo","ADGN004PO":"analisis_de_costes_para_la_toma_de","HOTT0006":"comercializacinon_de_productos","EOCO109PO":"especialista_en_autocad_civil_3d","ADGD0012":"especializacion_en_asesoramiento_fiscal","ADGD329PO":"gestion_de_comunidades_de_propietarios","AGAJ006PO":"planificacion_diseno_y_desarrollo_del","HOTT0008":"protocolo_en_eventos_turisticos","HOTR0045":"servicio_de_catering","SSCG074PO":"teleasistencia","ADGD006PO":"analisis_de_cuentas_anuales_en_la","TCPF0005":"asesoramiento_en_moda_e_imagen_personal","SANT0025":"atencion_psicosocial_a_pacientes_con","ADGD022PO":"business_strategy_modelos_de_negocio_y","SEAG13":"cambio_climatico_y_huella_de_carbono","COMM0019":"gestion_de_las_redes_sociales_en_la","SANT0046":"herramientas_para_la_mejora_de_la","COMM0006":"marketing_on_line_diseno_y_promocion_de","SSCE0035":"neurociencia_y_creatividad_en_la","ADGD0018":"nominas_y_seguridad_social_i","COMM076PO":"relaciones_publicas_y_gabinetes_de","ADGD71":"gestion_administrativa_global_con_erps","ADGD58":"contabilidad_general_digitalizada_y","IFCT124":"respuesta_a_incidentes_de_ciberseguridad","IFCT36":"excel_avanzado","SSCB0109":"dinamizacion_comunitaria","SEAG0209":"limpieza_en_espacios_abiertos_e","IFCT0309":"montaje_y_reparacion_de_sistemas","HOTI0108":"promocion_turistica_local_e_informacion","IFCT0209":"sistemas_microinformaticos","ADGD09EXP":"acompanamiento_de_personas_y_equipos","SSCG03":"atencion_integrada_en_los_cuidados","SSCG15":"atencion_y_apoyo_en_el_cuidado_de_la","FCOV22":"comunicacion_en_lengua_castellana_n2","FCOE0034":"iniciacion_a_la_lengua_castellana_para","SSCG06EXP":"intervencion_con_menores_y_familias_en","SSCG07EXP":"intervencion_con_mujeres_en_situacion","SSCG0091":"intervencion_en_las_alteraciones","FCOE0035":"lengua_castellana_para_la_integracion","IFCD57":"programacion_para_videojuegos_en_unity","IFCT137":"sap_s4hana_integracion_de_procesos_de","IFCT21":"usuario_final_sap_erp_area_economico","IFCT22":"usuario_final_sap_erp_area_logistica","SSCE0112":"atencio_a_lalumnat_amb_necessitats","COML13":"politica_y_gestion_informatizada_de","IFCD0050":"creacion_y_mantenimiento_de_paginas_web","FCOI17":"creacion_de_contenidos_digitales_y","FCOV0001":"resolucion_de_conflictos","FCOE0005OH":"aleman_a1_introduccion","FCOE0007OH":"aleman_a1_medio","FCOE0012OH":"aleman_a2_introduccion","ADGI0003OH":"comunicar_de_manera_mas_innovadora_y","IFCD022PO":"desarrollo_web_para_comercio_electronico","ADG_C_001_4B":"actividades_administrativas_de","FCOR0062HV":"acompanamiento_emocional","SSCE0006HV":"acreditacion_de_docentes_para","AFDP0013HV":"actuaciones_de_urgencia_y_primeros","ADGA0002OH":"administracion_y_gestion_de_recursos","SSCE0094HV":"ambito_familiar_orientacion_y_mediacion","ADGG0013":"analisis_de_datos_aplicado_a_las_redes","ADGA0143HV":"analisis_y_presentacion_de_datos_con","SANA0001HV":"anatomofisiologia_y_patologia_basica","FCOR0056HV":"animacion_sociocultural_en_la_tercera","FCOR0081HV":"aplicacion_informatica_contable","ADGG007PO":"aplicacion_spss_y_analisis_estadistico","ADGA0059HV":"aplicaciones_informaticas_de","FCOI0093HV":"aplicaciones_informaticas_de_nominas","SSCS0008HV":"apoyo_a_las_gestiones_cotidianas_de_las","SSCI0007HV":"atencion_a_la_familia_en_situaciones_de","SSCG0017":"atencion_centrada_en_la_persona","FCOP0026HV":"atencion_integral_a_personas_con","SANT0029HV":"atencion_primaria_a_enfermos_de","FCOI0064HV":"blockchain_avanzado","FCOI0063HV":"blockchain_basico","ENAC0002OH":"calificacion_energetica_de_los_edificios","SSCL0001OH":"carnet_profesional_de_la_limpieza_basico","FCOG0012HV":"chatgpt_e_inteligencia_artificial","FCOI0101HV":"chatgpt_e_inteligencia_artificial","SSCG0011HV":"ciberbullying_programasy_estrategias_de","FCOI0098HV":"ciberseguridad","ADGA0133HV":"cierre_contable_e_impuesto_de_sociedades","HOTG0002OH":"comercializacion_de_eventos","ADGA0010OH":"comercio_electronico","COML18":"comercio_exterior_normativa","IFCI0057HV":"community_manager","IMSV0002OH":"composicion_de_pantallas_y_animacion_de","ADGN0004OH":"conocimientos_basicos_de_bolsa","ADGD0100HV":"contabilidad","ADGD0006OH":"contabilidad_general","ADGN0010OH":"contabilidad_y_fiscalidad","ADGD0090HV":"contabilidad_administracion_y_gestion","ADGA0018OH":"contratos_nominas_y_seguridad_social","ADGG0044HV":"contratos_nominas_y_seguros_sociales","SSCB0002HV":"coordinador_a_de_actividades_y","ADGD85":"creatividad_e_innovacion","SANT0007HV":"cuidados_auxiliares_basicos_en","SANT0008HV":"cuidados_enfermeros_en_la_uci","SANT0028HV":"cuidados_paliativos","SANT032PO":"cuidados_paliativos","ADGN0014OH":"curso_practico_de_tributacion_en_la","IFCP0013HV":"curso_superior_en_programacion_con","EOCO0005OH":"desarrollo_de_proyectos_de_edificacion","SEAD0040HV":"director_de_seguridad","IMAI0005HV":"domotica","SSCS0007OH":"el_cuidado_de_personas_dependientes","FCOD0144HV":"elaboracion_de_hojas_de_excel_avanzado","FCOD0146HV":"elaboracion_de_tablas_dinamicas_de_excel","IMAQ0013OH":"electricidad_basica","SSCG0022HV":"emocion_y_cuerpo_el_cuerpo_grita_lo_que","IFCI0098HV":"excel_2016_2019_avanzado","IFCI0097HV":"excel_2016_2019_basico","FCOV0036HV":"aplicacion_de_la_hoja_de_calculo_excel","ADGF0005HV":"finanzas_para_no_financieros_con_apoyo","ADGN145PO":"firma_y_facturacion_electronica","SANT0009HV":"fisioterapia_y_rehabilitacion_en","ADGD0094":"gestion_de_proyectos_con_inteligencia","SANT067PO":"gestion_de_riesgos_alergicos_en","ADGG0035HV":"gestion_documental_y_archivos","ADGD0025HV":"gestion_laboral_informatizada","ADGD0093HV":"gestion_laboral_informatizada","COML0028HV":"gestion_y_control_de_compras_y_stock_en","FCOD0163HV":"habilidades_directivas_para_la_gestion","ADGG21":"herramientas_colaborativas_office_365","COML0027OV":"implantacion_practica_lean","ADGA0054HV":"impuesto_sobre_el_valor_anadido","ADGA0055HV":"impuesto_sobre_sociedades","FCOE0053HV":"ingles_b1_avanzado","FCOE0052HV":"ingles_b1_introduccion","FCOE0056HV":"ingles_b2_avanzado","FCOE0022HV":"ingles_b2_introduccion","FCOE0054HV":"ingles_b2_introduccion","FCOE0055HV":"ingles_b2_medio","FCOE0036HV":"ingles_c1_introduccion","FCOE0057HV":"ingles_c1_introduccion","ADGF0004HV":"iniciacion_a_blockchain","IMAF0001OH":"instalaciones_de_ventilacion_y","FCOO0011HV":"inteligencia_artificial_aplicada_a_la","IFCD0099":"inteligencia_artificial_generativa_y","FCOD0040HV":"inteligencia_emocional","EOCB0001HV":"interiorismo","ADGA0070OH":"interpretacion_de_balances_y_analisis","ADGF0001HV":"inversion_de_criptomonedas","ADGA0053HV":"irpf","ADGF0006HV":"iva_impuesto_sobre_el_valor_anadido","ADGA0005HV":"la_inteligencia_emocional","SSCE0022HV":"la_violencia_familiar_y_contra_la_mujer","SSCG0026HV":"lengua_de_signos_espanola","COML0019OV":"logistica_inversa","INAN0004HV":"manipulacion_de_alimentos_y_alergias","ADGD0020OH":"mecanizacion_contable","ADGI0005OH":"mejora_de_la_comunicacion_interna_en_la","SSCI0006HV":"monitores_de_mediodia_en_centros","SANT0030HV":"movilizacion_de_enfermos","FCOS0068HV":"movilizacion_traslado_y_deambulacion","FCOS0086HV":"necesidades_y_cuidados_de_las_personas","ADGG0037HV":"negociacion_win_win_tu_ganas_yo_gano","SSCS0013HV":"nutricion_y_cocina_natural_para","SAND0004HV":"nutricion_y_dietetica","SSCG0027HV":"orientacion_sociolaboral","SSCE126PO":"prevencion_de_drogodependencias_en_el","SSCM0002OH":"prevencion_de_riesgos_psicosociales","SSCE0071HV":"problemas_de_conducta_y_su_resolucion","SSCI0018":"procedimientos_de_trabajo_para","ADGA0093OH":"programa_integral_de_la_gestion_laboral","FCOR0058HV":"reciclaje_de_piloto_de_drones_por_el","ADGG0036HV":"redaccion_y_presentacion_de_informes","SANP0003HV":"salud_nutricion_y_dietetica","ADGN117PO":"seleccion_de_inversiones","SEAD0063OH":"servicio_de_vigilancia_en_centros_de","SSCS0027HV":"soledad_y_activacion_comunitaria_en_el","FCOD0073OH":"supervisor_a_de_limpieza","SANC0007HV":"tecnicas_basicas_de_asistencia_a","SSCB0003HV":"tecnicas_de_animacion_de_grupos","FCOS0053HV":"tecnicas_de_limpieza_y_desinfeccion","SSCL0001HV":"tecnicas_de_limpieza_y_desinfeccion","FCOD0041HV":"tecnicas_de_relajacion_para_el_control","ADGA0131HV":"teletrabajo_productividad_y_herramientas","SANT0021HV":"terapia_del_dolor","ADGA0162HV":"ticket_bai_batuz","SANF0004OH":"trastornos_afectivos_y","SANF0005OH":"trastornos_digestivos","IFCI0095HV":"word_2016_2019_basico","IFCI0096HV":"word_avanzado_2016_2019","COMM0010OV":"marketing_digital_y_redes_sociales","HOTT0005OV":"inteligencia_artificial_aplicada_a_la","IFCD60":"comunicacion_e_interaccion_social_en","IFCD53":"desarrollo_en_java_con_framework_spring","IFCD59":"programacion_web_con_net","MF0071_2":"tecnicas_de_inmovilizacion_movilizacion","MF0070_2":"tecnicas_de_soporte_vital_basico_y_de","EOCO080PO":"arcgis_10_x_arcgis_pro_nivel_usuario","EOCO082PO":"cartografia_digital_con_arcgis_10_y","EOCO094PO":"creacion_de_aplicaciones_de_mapas_web","ARGG024PO":"diseno_asistido_por_ordenador_con","ARGG007PO":"diseno_asistido_por_ordenador_con_catia","EOCO064PO":"gestion_de_proyectos_con_metodologia_bim","EOCO117PO":"phyton_en_arcgis","IFCM0005":"programacion_de_aplicaciones_android","COMM0016":"promocion_y_negocio_a_traves_de_las","EOCO089PO":"qgis_y_grass_nivel_usuario","ADGG079PO":"trados_programa_de_traduccion","IFCT119PO":"virtualizacion_y_cloud_computing","CTRL0019":"frances_intermedio","COMM057PO":"marketing_distribucion_comercial_y","IFCM039PO":"wordpress","MF1583_3":"acciones_para_la_igualdad_efectiva_de","MF1453_3":"comunicacion_con_perspectiva_de_genero","MF1433_3":"marketing_cultural","MP0303":"modulo_de_practicas_profesionales_no","MP0191":"modulo_de_practicas_profesionales_no","MP0561":"modulo_de_practicas_profesionales_no","MF1454_3":"participacion_y_creacion_de_redes_con","MF1431_3":"programaciones_culturales","MF1582_3":"promocion_para_la_igualdad_efectiva_de","MF1432_3":"proyectos_de_animaci_n_cultural","FMEC0219_2":"soldadura_por_arco_bajo_gas_protector","IMAR0408":"montaje_y_mantenimiento_de","FMEC0319":"soldadura_por_arco_con_electrodo","FMEC0219":"soldadura_por_arco_bajo_gas_protector","SAND0001OH":"alergias_e_intolerancias_alimentarias","ADGA0101HV":"como_utilizar_instagram_facebook","ADGD0010HV":"contabilidad_general","SANC0002OH":"cuidados_paliativos","COML0030OV":"el_almacenamiento_la_clave_del_proceso","IFCT0002HV":"excel","IFCI0031HV":"excel_avanzado","IFCI0084HV":"excel_medio","SEAD100PO":"habilitacion_vigilante_de_explosivos","SEAD0077HV":"habilitacion_vigilante_de_seguridad","COMA0003OH":"logistica_y_gestion_de_almacenes_picking","ADGA0134HV":"marketing_digital","ADGA0168HV":"ofimatica","ADGA0001HV":"optimizacion_de_costes_logisticos_en_la","SANT0029OH":"primeros_auxilios","SEAD0056OH":"servicio_de_respuesta_ante_alarmas","SEAD0057OH":"servicio_de_transporte_de_seguridad","IFCC0009OH":"uso_de_aplicaciones_google_doc_s_calc","ARGG004PO":"autoedicio_disseny_grafic","SSCE013PO":"aprendizaje_cooperativo_en_el_aula","SANT034PO":"cuidados_y_terapias_naturales","FCOV07":"comunicacio_a_llengues_estrangeres","FCOV08":"comunicacio_a_llengues_estrangeres","FCOO08":"creacio_i_gestio_de_la_marca_personal_i","ARGN0110":"desenvolupament_de_productes_editorials","ARGG0110":"disseny_de_productes_grafics","MF2185_3":"politiques_de_marqueting","MF2186_3":"llancament_i_implantacio_de_productes_i","MF2188_3":"organitzacio_i_control_del_pla_de","MP0499":"modulo_de_practicas_no_laborales_de","MF0491_3":"programacion_web_en_el_entorno_cliente","MF0493_3":"implantacion_de_aplicaciones_web_en","MP0391":"modulo_de_practicas_profesionales_no","CTRL0040":"catala_a1_catala_nivell_inicial_a1","FC00_PFE_ARGG0110_MP031268":"pfe_argg0110_periode_de_formacio_en","FC00_PFE_SSCE0110_MP035369":"pfe_ssce0110_periode_de_formacio_en","FC00_PFE_SSCE0112_MP050369":"pfe_ssce0112_periode_de_formacio_en","FC00_B_HOTI0108_MF105769":"b_hoti0108_mf1057_angles_professional","FC00_B_COMM0112_MF218768":"b_comm0112_mf2187_gestio_d","FC00_B_COMM0112_MF100268":"angles_professional_per_a_activitats","FC00_B_ARGG0110_MF069668":"projecte_de_productes_grafics","FC00_B_ARGG0110_MF069768":"edicio_creativa_d_imatges_i_disseny_d","FC00_B_ARGG0110_MF069868":"arquitectura_tipografica_i_maquetacio","FC00_B_ARGG0110_MF069968":"b_argg0110_mf0699_preparacio_d_arts","FC00_B_SSCE0110_MF144269":"programacio_didactica_d_accions","FC00_B_SSCE0110_MF144369":"b_ssce0110_mf1443_seleccio_elaboracio","FC00_B_SSCE0110_MF144469":"imparticio_i_tutoritzacio_d_accions","FC00_B_SSCE0110_MF144569":"avaluacio_del_proces_d_ensenyament","FC00_B_SSCE0110_MF144669":"b_ssce0110_mf1446_orientacio_laboral_i","FC00_B_SSCE0112_MF142669":"aplicacio_tecnica_de_mobilitat","FC00_B_SSCE0112_MF142769":"participacio_en_els_programes_d","FC00_B_SSCE0112_MF142869":"b_ssce0112_mf1428_autonomia_i_higiene","FC00_B_SSCE0112_MF142969":"b_ssce0112_mf1429_atencio_i_vigilancia","FC00_B_SSCE0112_MF143069":"b_ssce0112_mf1430_habits_i_autonomia_en","HOTT0020":"informacio_i_atencio_turistica_en","HOTR0098":"la_sumilleria_professional","HOTR0097":"sumilleria_de_cervesa_i_maridatge","HOTR0071":"sumilleria_i_maridatge","ARGG0010":"adobe_illustrator_ii","ARGG0011":"adobe_indesign_ii","COMM0010":"canals_de_promocio_i_publicitat_en","COMM0017":"pla_de_marqueting_per_a_dispositius","COMM0028":"aparadorisme_estrategic_i_visual_design","COMM37":"elaboracio_d_un_pla_de_marqueting","COMT0016":"tecniques_per_a_la_venda_i_habilitats","IMST0004":"fotografia_digital_i_tractament_d","IMSV43":"edicio_de_video_amb_adobe_premiere","SSCB0001":"animacio_sociocultural","SSCE0014":"prevencio_deteccio_i_actuacio_davant_de","SSCE0038":"tutories_i_orientacio","SSCE0046":"deteccio_eines_i_recursos_per_fer_front","SSCE0053":"educacio_inclusiva_centrada_en_el","SSCE0054":"educacio_inclusiva_centrada_en_el","SSCG0040":"orientacio_i_intervencio_social_amb","TCPF0023":"disseny_de_moda_3d_inicial","CTRO0019":"eines_d_intel_ligencia_artificial","ADGD0061":"comptabilitat_basica","ADGG0006":"neurolideratge","ADGG17":"ms_excel_basic_2016_accessible","ADGG19":"ms_word_2016_avancat_accessible","ADGG20":"ms_excel_2016_avancat_accessible","ARGG0005":"visual_design_amb_adobe_photoshop","COMM0015":"desenvolupament_de_continguts_per_a_les","CTRD0007":"competencies_basiques_en_relacio_amb_l","CTRD0017":"twitter_per_al_negoci","CTRG0005":"gestio_del_temps_i_productivitat","CTRG0006":"eines_per_a_l_organitzacio_del_temps","CTRO0003":"personal_branding","CTRP0004":"programacio_neurolinguistica_nivell_ii","CTRP0010":"programacio_neurolinguistica","CTRP0011":"eines_per_a_la_gestio_de_les_emocions","CTRP0013":"tecnicas_para_hablar_en_publico","CTRP0015":"aspectes_basics_dels_processos_de","CTRR0010":"estrategies_del_control_de_l_estres_el","SSCE0006":"aplicacio_de_les_eines_google_a_l","OF-01":"idiomes_per_a_l_atencio_al_client","OF-02":"idiomes_per_a_l_atencio_al_client","MAIL-01":"captacion_por_mail","TMVL04":"soldadura_tig_para_automocion","TMVG12":"mantenimiento_de_bicicletas_y_vehiculos","SEA_C_004_5B":"planificacion_y_supervision_de","FCOV02":"comunicacion_en_lengua_castellana_n3","TMVO12":"formacion_para_piloto_profesional_de","HOTA0007":"planificacion_y_gestion_del","MF1325_1":"operaciones_auxiliares_de_almacenaje","TMVL08":"procedimientos_basicos_en_la_reparacion","MF0972_1":"limpieza_tratamiento_y_mantenimiento_de","MF0996_1":"limpieza_del_mobiliario_interior","MF1087_1":"limpieza_de_cristales_en_edificios_y","MF1088_1":"tecnicas_y_procedimientos_de_limpieza","FMES0015HV":"caldereria_industrial_fina","TMVL0002OH":"carroceria_del_automovil","IMSG0008HV":"certificado_teorico_oficial_de_pilotaje","FMEM0001HV":"control_del_almacenamiento_mecanico","TMVO0002HV":"curso_de_gestion_y_documentacion_para","FMEC0006HV":"soldadura_tig","FMEL0005HV":"gestion_de_almacen_y_manejo_de","IMAT0001HV":"gestion_del_almacen_y_manejo_de","IMAM0001OH":"interpretacion_de_planos","FMES0004OH":"interpretacion_practica_de_planos_en","IMSG0006HV":"manejo_de_drones_para_funcion","IMSG0007HV":"manejo_de_drones_para_funcion","FMES0012HV":"multicarnet_de_carretilla_transpaleta","FMEM0062HV":"multicarnet_para_fabricacion_mecanica","IMAQ0026OH":"operador_de_carretilla_elevadora","IMAQ0029OH":"operador_de_maquinaria_de_limpieza","IMAQ0030OH":"operador_de_plataforma_elevadora_tipos","AFDP0008OH":"primeros_auxilios","FMEM0097HV":"primeros_auxilios_en_el_sector_metal","TMVO0001HV":"radiofonista_y_coordinacion_de_drones","SEAG0003OV":"realizar_labores_de_limpieza_en","FMEL0002OH":"soldadura_con_electrodo","FMEC0011HV":"soldadura_mig_mag","FMES0010OH":"soldadura_mig_mag","FMEI0009HV":"uso_de_drones_en_la_industria_licencia","IMAI008PO":"fontaneria","ADGD188PO":"nominas","ELEE026PO":"normativa_infraestructuras_alta_tension","FMEC011PO":"soldadura","ADGN064PO":"gestion_fiscal_irpf","FCOO12":"competencias_para_el_desarrollo_de_los","HOTR015PO":"cocina_internacional","IMPE015PO":"higiene_e_hidratacion_de_la_piel_del","SEAD263PO":"prevencion_en_trabajos_en_altura","SSCB004PO":"el_deporte_como_herramienta_dinamizadora","SSCG066PO":"orientacion_sociolaboral_para_la","HOTA004PO":"protocolos_en_hosteleria","IMPE003PO":"manicura","HOTA005PO":"recepcion_y_atencion_al_cliente","SSCB014PO":"tecnicas_de_animacion_de_grupos","SSCG030PO":"discapacidad_calidad_de_vida_en","HOTR021PO":"cocina_sana","INAF0006":"elaboracion_de_pan","HOTR033PO":"elaboraciones_basicas_para_pasteleria","IMST006PO":"tecnicas_creativas_avanzadas_en","SEAD048PO":"deteccion_prevencion_y_gestion_del","SSCB002PO":"coordinador_a_de_actividades_y","TMVI046PO":"certificado_de_aptitud_profesional_cap","COML008PO":"gestion_basica_del_almacen","AFDA010PO":"gimnasias_suaves","IMPE004PO":"maquillaje","CTRG0004":"conduccion_de_reuniones","CTRR0016":"prevencion_y_deteccion_de_situaciones","FCOE005PO":"frances_a1_marco_comun_europeo","ADGD129PO":"gestion_de_recursos_humanos","HOTR0608":"servicios_de_restaurante","COMT0009":"gestion_de_la_calidad_de_servicio_en_el","HOTR0004":"identificacion_de_alergenos_y","HOTA0004":"tecnicas_y_procedimientos_de_limpieza","HOTR017PO":"cocina_mediterranea","AGAJ003PO":"diseno_floral","ARGG008PO":"edicion_de_imagenes_y_tratamiento","IMPQ001PO":"estilismo_corte_de_cabello","CTRD0034":"operaciones_informaticas_basicas","CTRO0006":"orientacion_laboral_y_empleabilidad","HOTA008PO":"tecnicas_y_procedimientos_de_limpieza","CTRI0002":"prevencion_del_acoso_sexual_y_por_razon","CTRO0020":"tecnicas_de_busqueda_de_empleo","CTRL0016":"frances_basico","IMPP0208":"servicios_esteticos_de_higiene","ADGG0007":"aplicacion_de_la_ley_de_proteccion_de","SEAG0003":"economia_circular_principios_de_la","ADGG081PO":"fundamentos_de_web_2_0_y_redes_sociales","AFDA0310":"actividades_de_natacion","AFDP0109":"socorrismo_en_instalaciones_acuaticas","SSCG0001":"animacion_estimulativa_con_personas_en","SSCB02":"coordinacion_y_apoyo_a_la_direccion_de","SSCG10":"coordinacion_y_gestion_de_servicios_de","AG":"metodologias_agiles_para_empresas","IN":"inteligencia_de_negocio","IA":"inteligencia_artificial_aplicada_al","IAV":"ia_aplicada_al_puesto_de_trabajo_nivel","03-BIO24":"dinamizacion_y_participacion_social","04-BIO24":"dinamizacion_y_participacion_social","08-BIO24":"tecnologia_y_competencias_digitales","09-BIO24":"tecnologia_y_competencias_digitales","05-BIO24":"gestion_de_la_informacion_para_la","06-BIO24":"gestion_de_la_informacion_para_la","07-BIO24":"perspectiva_de_genero_e_igualdad","01-BIO24":"comunidades_de_practicas_para","02-BIO24":"comunidades_de_practicas_para","AGT":"agentes_del_cambio","01-SSCS0208":"silver_economy_skills_formacion_en","IT01":"descubre_internet","IT01.1":"descubre_internet_nivel_i","IT01.2":"descubre_internet_nivel_ii","IT01.3":"descubre_internet_nivel_iii","IT02":"vas_a_viajar_con_internet_hagamoslo","IT03":"alfabetizacion_mediatica_busqueda_y","IT04":"aplicaciones_para_mapas","IT05":"uso_de_internet_en_familia","IT06":"herramientas_ofimaticas","IT06.1":"herramientas_ofimaticas_procesadores_de","IT06.2":"herramientas_ofimaticas_hojas_de_calculo","IT06.3":"herramientas_ofimaticas_presentaciones","IT07":"uso_y_manejo_de_smartphone","IT07.1":"uso_y_manejo_de_smartphone_nivel_i","IT07.2":"uso_y_manejo_de_smartphone_nivel_ii","IT07.3":"uso_y_manejo_de_smartphone_nivel_iii","IT08":"iniciacion_a_las_redes_sociales","IT09":"compra_y_pago_seguro_en_internet","IT10":"crea_videos_con_imagen_y_sonido","IT11":"retoque_digital_de_fotografias_e","IT12":"compartir_contenidos_digitales_y_firma","IT13":"certificados_digitales_y_firma","IT14":"banca_online_y_uso_de_servicios","IT15":"tramites_online_con_la_administracion","IT16":"busqueda_de_empleo_cv_y_redes_sociales","IT17":"tu_comportamiento_en_la_red_netiqueta","IT18":"ciberseguridad_y_derechos_digitales","IT19":"iniciacion_a_la_informatica","IT19.1":"iniciacion_a_la_informatica_nivel_i","IT19.2":"iniciacion_a_la_informatica_nivel_ii","IT19.3":"iniciacion_a_la_informatica_nivel_iii","IT20.1":"iniciacion_al_uso_de_ia_nivel_i","IT20.2":"iniciacion_al_uso_de_ia_nivel_ii","01-COML0110":"vuelo_hacia_la_excelencia_logistica","01-SSCM0108":"operacion_manitas_todo_funciona_todo","IFCT0409":"implantacion_y_gestion_de_elementos","ELES0108":"montaje_y_mantenimiento_de","IFCT0110":"operacion_de_redes_departamentales","IFCM0110":"operacion_en_sistemas_de_comunicaciones","IFCD0112":"programacion_con_lenguajes_orientados_a","IFCD72":"bases_de_datos_nosql_mongodb_y_couchdb","IFCD28":"desarrollo_de_videojuegos_y_realidad","IFCD0011":"desarrollo_y_visualizacion_de_datos_con","IFCD41":"escultura_digital_con_zbrush","IFCD35":"flutter_y_dart","ELES02EXP":"instalacion_de_redes_de_tecnologia_ftth","IFCD34":"interfaces_y_experiencia_de_usuario_ui","IFCD65EXP":"javascript_avanzado_e_ionic","IFCD42":"modelado_poligonal_texturizado_y","IFCT142":"procedimientos_basicos_en_impresion_y","IFCT0015":"programacion_de_arduino_y_placas","IFCT57":"reparacion_de_smartphones_y","IFCD40":"diseno_de_videojuegos_y","IFCD0016":"creacion_de_videojuegos_con_unreal","IFCD0014":"desarrollo_de_aplicaciones_con_spring_e","IFCT0073":"mejora_tu_productividad_con","26EMHA-1":"ayudante_de_cocina","26EMHA-2":"ayudante_de_servicio_de_sala","26EMHA-3":"ayudante_de_pasteleria","26EMHA-4":"auxiliar_de_carniceria","26EMHA-5":"auxiliar_de_pescaderia","26EMHA-6":"auxiliar_de_carniceria_avanzada"};
+
+const PLAN_OPTIONS = [
+  {v:'est', l:'Estatal'},
+  {v:'aut', l:'Autonómico'},
+  {v:'esp', l:'Especial'},
+];
+
+const MODALIDAD_OPTIONS = [
+  {v:'onl', l:'Online'},
+  {v:'semipres', l:'Semipresencial'},
+  {v:'presen', l:'Presencial'},
+];
+
+const AUDIENCIA_OPTIONS = [
+  {v:'desemp', l:'Desempleados'},
+  {v:'trab', l:'Trabajadores'},
+];
+
+// Códigos de producto de FP Aspasia: solo se añaden (entre __ __, antes del
+// nombre de producto) para los cursos de este listado. Las variantes
+// presenciales llevan el mismo código que su versión online. El resto de
+// productos de la marca (incluido 'gral') se quedan igual.
+const FPASP_PRODUCTO_CODIGOS = {
+  smr: 'IFC-12142001-N2-V1',
+  an3d: 'IMS-12241904-N3-V1',
+  asir: 'IFC-12242001-N3-V1',
+  comint: 'COM-12242201-N3-V1',
+  comint_presen: 'COM-12242201-N3-V1',
+  dietet: 'SAN-12201952-N3-V1',
+  dircocina: 'HOT-12242404-N3-V1',
+  dircocina_presen: 'HOT-12242404-N3-V1',
+  peluq: 'IMP-12240502-N3-V1',
+  patmoda: 'TCP-12241701-N3-V1',
+  patmoda_presen: 'TCP-12241701-N3-V1',
+  translog: 'COM-12242204-N3-V1',
+  adminfin: 'ADG-12242102-N3-V1',
+  adminfin_presen: 'ADG-12242102-N3-V1',
+  infantil: 'SSC-12242301-N3-V1',
+  dam: 'IFC-12242002-N3-V1',
+  daw: 'IFC-12242003-N3-V1',
+  marketing: 'COM-12242203-N3-V1',
+  marketing_presen: 'COM-12242203-N3-V1',
+};
+
+const BRANDS = [
+  {v:'opf', l:'OpositaFijo'},
+  {v:'hop', l:'Hoppers'},
+  {v:'fpasp', l:'FP Aspasia'},
+  {v:'ide', l:'Ideas'},
+  {v:'fvs', l:'Fivestars'},
+  {v:'asp', l:'Aspasia'},
+];
+
+const BRAND_COLORS = {
+  opf: '#5B4FE9',
+  hop: '#0EA5B7',
+  fpasp: '#D6572E',
+  ide: '#1A9E6C',
+  fvs: '#C97A0A',
+  asp: '#C0392B',
+};
+
+const GERENCIA_OPTIONS = [
+  {v:'cyl', l:'Castilla y León'},
+  {v:'ext', l:'Extremadura'},
+  {v:'val', l:'Valencia'},
+  {v:'mur', l:'Murcia'},
+  {v:'cnt', l:'Cantabria'},
+  {v:'mad', l:'Madrid'},
+  {v:'and', l:'Andalucía'},
+  {v:'pln', l:'Estatal (plan nacional)'},
+  {v:'can', l:'Canarias'},
+  {v:'bal', l:'Baleares'},
+  {v:'cat', l:'Cataluña'},
+  {v:'ast', l:'Asturias'},
+  {v:'pva', l:'País Vasco'},
+  {v:'gal', l:'Galicia'},
+  {v:'fbio', l:'Especial: Fundación Biodiversidad'},
+  {v:'agdc', l:'Especial: Agentes del Cambio'},
+  {v:'cfsb', l:'Especial: Centro de Formación San Blas'},
+  {v:'emha', l:'Especial: Escuela Municipal de Hostelería y Alimentación'},
+  {v:'cdcn', l:'Especial: Competencias Digitales Cantabria'},
+  {v:'cdca', l:'Especial: Competencias Digitales Canarias'},
+  {v:'aeoi', l:'Especial: Agrupación EOI'},
+];
+
+const PRODUCTOS_BY_BRAND = {
+  opf: [
+    {v:'pnac', l:'Policía Nacional'},
+    {v:'gcivil', l:'Guardia Civil'},
+    {v:'tropayma', l:'Tropa y Marinería'},
+    {v:'admest', l:'Administrativo del Estado'},
+    {v:'auxest', l:'Auxiliar Administrativo'},
+    {v:'ahacienda', l:'Agentes de la Hacienda Pública'},
+    {v:'cgestion', l:'Cuerpo de Gestión'},
+    {v:'tai', l:'Técnicos Auxiliares de Informática'},
+    {v:'admss', l:'Administrativo de la Seguridad Social'},
+    {v:'generico', l:'Oposiciones: Producto Genérico'},
+    {v:'tproadjus', l:'Tramitación Procesal y Administrativa de Justicia'},
+    {v:'auxjud', l:'Auxilio Judicial'},
+    {v:'cat_segu', l:'Categoría: Seguridad (Policía Nacional + Guardia Civil)'},
+    {v:'cat_admin', l:'Categoría: Administración (Administrativo, Auxiliar, Gestión, Téc. Informática)'},
+    {v:'cat_just', l:'Categoría: Justicia (Auxilio Judicial + Tramitación Procesal)'},
+  ],
+  hop: [
+    {v:'sapcexp', l:'Curso: SAP Concur Expense'},
+    {v:'web_sapcexp', l:'Webinar: SAP Concur Expense'},
+    {v:'sapctra', l:'Curso: SAP Concur Travel'},
+    {v:'web_sapctra', l:'Webinar: SAP Concur Travel'},
+    {v:'sapsupply', l:'Curso: SAP Supply Chain (avanzado)'},
+    {v:'web_sapsupply', l:'Webinar: SAP Supply Chain'},
+    {v:'sapfin', l:'Curso: SAP Finanzas Core (avanzado)'},
+    {v:'web_sapfin', l:'Webinar: SAP Finanzas Core'},
+    {v:'saptrib', l:'Curso: SAP Gestión de Tributos'},
+    {v:'web_saptrib', l:'Webinar: SAP Gestión de Tributos'},
+    {v:'salesagent', l:'Curso: Salesforce Agentforce + Data360'},
+    {v:'web_salesagent', l:'Webinar: Salesforce Agentforce + Data360'},
+    {v:'gral', l:'Marca general (sin producto concreto)'},
+    {v:'cat_sap', l:'Categoría: SAP (todos los cursos SAP)'},
+    {v:'cat_sales', l:'Categoría: Salesforce (todos los cursos Salesforce)'},
+  ],
+  fpasp: [
+    {v:'an3d', l:'Grado Superior Animaciones 3D (online)'},
+    {v:'daw', l:'Grado Superior DAW - Desarrollo de Aplicaciones Web (online)'},
+    {v:'dam', l:'Grado Superior DAM - Desarrollo de Aplicaciones Multiplataforma (online)'},
+    {v:'dietet', l:'Grado Superior Dietética (online)'},
+    {v:'peluq', l:'Grado Superior Estilismo y Dirección de Peluquería (online)'},
+    {v:'patmoda', l:'Grado Superior Patronaje y Moda (online)'},
+    {v:'patmoda_presen', l:'Grado Superior Patronaje y Moda (presencial)'},
+    {v:'smr', l:'Grado Medio Sistemas Microinformáticos y Redes (online)'},
+    {v:'adminfin', l:'Grado Superior Administración y Finanzas (online)'},
+    {v:'adminfin_presen', l:'Grado Superior Administración y Finanzas (presencial)'},
+    {v:'asir', l:'Grado Superior Administración de Sistemas Informáticos en Red (online)'},
+    {v:'dircocina', l:'Grado Superior Dirección de Cocina (online)'},
+    {v:'dircocina_presen', l:'Grado Superior Dirección de Cocina (presencial)'},
+    {v:'translog', l:'Grado Superior Transporte y Logística (online)'},
+    {v:'infantil', l:'Grado Superior Educación Infantil (online)'},
+    {v:'comint', l:'Grado Superior Comercio Internacional (online)'},
+    {v:'comint_presen', l:'Grado Superior Comercio Internacional (presencial)'},
+    {v:'marketing', l:'Grado Superior Marketing y Publicidad (online)'},
+    {v:'marketing_presen', l:'Grado Superior Marketing y Publicidad (presencial)'},
+    {v:'emergencias_presen', l:'Coordinación de Emergencias y Protección Civil (presencial)'},
+    {v:'gral', l:'Marca general (sin producto concreto)'},
+  ],
+  ide: [
+    {v:'vigsegur', l:'Vigilante de Seguridad'},
+    {v:'segprivper', l:'Seguridad Privada y Protección de Personas'},
+    {v:'segprivexp', l:'Seguridad Privada y Protección de Explosivos'},
+    {v:'gobernanta', l:'Housekeeper Manager (Gobernanta)'},
+    {v:'ctrlacceso', l:'Controlador de Acceso - 40 horas'},
+    {v:'vigaerop', l:'Vigilancia en Aeropuertos'},
+    {v:'vigurbanpol', l:'Vigilancia en Urbanizaciones, Polígonos, Transportes y Espacios Públicos'},
+    {v:'vigintern', l:'Vigilancia en Centros de Internamiento y Dependencias de Seguridad'},
+    {v:'respalarmas', l:'Servicio de Respuesta ante Alarmas'},
+    {v:'vigrayosx', l:'Vigilancia con Aparatos de Rayos X'},
+    {v:'vigpatrim', l:'Vigilancia de Patrimonio Histórico'},
+    {v:'vignuclear', l:'Vigilancia en Instalaciones Nucleares'},
+    {v:'vigdeportes', l:'Vigilancia en Eventos Deportivos'},
+    {v:'vighospital', l:'Vigilancia en Centros Hospitalarios'},
+    {v:'vigcomerc', l:'Vigilancia en Centros Comerciales'},
+    {v:'vigtransp', l:'Curso de Vigilancia en Transporte de Seguridad'},
+    {v:'vigpuertos', l:'Curso de Vigilancia en Puertos'},
+    {v:'recephotel_ini', l:'Curso de Recepción de Hotel (nivel inicial)'},
+    {v:'recephotel_avz', l:'Curso de Recepción de Hotel (nivel avanzado)'},
+    {v:'limpiezahost', l:'Limpieza Profesional en Hostelería y Restauración'},
+    {v:'camarerapis', l:'Camarera de Pisos'},
+    {v:'gral', l:'Marca general (sin producto concreto)'},
+  ],
+  fvs: [
+    {v:'entren', l:'Curso Entrenador Personal'},
+    {v:'nutri', l:'Curso Nutrición Deportiva'},
+    {v:'yoga', l:'Curso Yoga'},
+    {v:'pilat', l:'Curso Pilates'},
+    {v:'funct', l:'Curso Functional Training'},
+    {v:'mtecent', l:'Máster Tecnología Aplicada al Entrenamiento Personal'},
+    {v:'mnutri', l:'Máster Nutrición y Suplementación Aplicada a la Composición Corporal'},
+    {v:'mcultur', l:'Máster Culturismo y Estética Corporal (entren., nutri., prevención lesiones)'},
+    {v:'mhibrid', l:'Máster en Entrenamiento Híbrido y Funcional'},
+    {v:'mreadap', l:'Máster en Innovación y Modelos de Intervención y Readaptación de Lesiones'},
+    {v:'msuelo', l:'Máster Suelo Pélvico: Embarazo, Postparto y Salud Femenina'},
+    {v:'tsaf', l:'FP TSAF'},
+    {v:'tsd', l:'FP TSD'},
+    {v:'gral', l:'Marca general (sin producto concreto)'},
+  ],
+  asp: [
+    {v:'gral', l:'Marca general (sin producto concreto)'},
+  ],
+};
+
+// Para Oposita Fijo: un valor de producto es "categoría" si empieza por 'cat_'.
+// Todo lo demás es "producto específico" y lleva el código entre __ __.
+function esCategoriaOpf(valor){
+  return valor.startsWith('cat_');
+}
+
+const TIPOS = [
+  {v:'nativo', l:'Nativo (formulario en plataforma)'},
+  {v:'landing', l:'Landing page'},
+  {v:'web', l:'Web corporativa'},
+];
+const OBJETIVOS = [
+  {v:'visib', l:'Visibilidad'}, {v:'trafic', l:'Tráfico'},
+  {v:'leads', l:'Leads'}, {v:'matric', l:'Matrícula'}, {v:'recu', l:'Recuperación'},
+];
+const FUNNELS = [ {v:'tofu', l:'TOFU'}, {v:'mofu', l:'MOFU'}, {v:'bofu', l:'BOFU'} ];
+const SEGMENTACIONES = [
+  {v:'rmkt', l:'Remarketing'}, {v:'prosp', l:'Prospecting'}, {v:'lal', l:'Lookalike'},
+  {v:'int', l:'Base interna'}, {v:'marca', l:'Búsquedas de marca'}, {v:'genr', l:'Genérico'},
+];
+
+// ---------- HELPERS ----------
+const $ = (id) => document.getElementById(id);
+
+function fillSelect(sel, items, valueKey, labelKey, placeholder){
+  sel.innerHTML = '';
+  if(placeholder){
+    const o = document.createElement('option');
+    o.value=''; o.textContent = placeholder;
+    sel.appendChild(o);
+  }
+  items.forEach(it=>{
+    const o = document.createElement('option');
+    o.value = it[valueKey]; o.textContent = it[labelKey];
+    sel.appendChild(o);
+  });
+}
+
+function slug(s){
+  return (s||'').toString().trim().toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/\s+/g,'_')
+    .replace(/[^a-z0-9_]/g,'');
+}
+
+// Igual que slug(), pero sin eliminar el guion "-": algunos códigos de acción
+// del SEPE lo llevan como carácter significativo (ej. COML0006-A) y hay que
+// conservarlo tal cual para que el mapeo automático de leads siga funcionando.
+function slugKeepHyphen(s){
+  return (s||'').toString().trim().toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/\s+/g,'_')
+    .replace(/[^a-z0-9_-]/g,'');
+}
+
+function provinciaLabel(p){
+  return p.replace(/_/g,' ').replace(/\b\w/g, c => c.toUpperCase());
+}
+
+// ---------- INIT: medio / fuente / term ----------
+fillSelect($('medium'), MEDIUMS, 'v', 'l', null);
+fillSelect($('term'), TERM_OPTIONS, 'v', 'l', 'Sin especificar');
+fillSelect($('estrategia-afiliacion'), AFILIACION_ESTRATEGIA_OPTIONS, 'v', 'l', 'Sin especificar');
+
+function refreshSources(){
+  const m = MEDIUMS.find(x=>x.v===$('medium').value);
+  let sources = m ? m.sources : [];
+  // 'ima_mkt' solo aplica a la marca Aspasia; para el resto de marcas se oculta.
+  if($('marca').value !== 'asp'){
+    sources = sources.filter(s => s !== 'ima_mkt');
+  }
+  const srcItems = sources.map(s=>({v:s,l:s}));
+  fillSelect($('source'), srcItems, 'v', 'l', null);
+  toggleTermRow();
+}
+function toggleTermRow(){
+  const isGoogle = $('source').value === 'google';
+  const medium = $('medium').value;
+  const isPerfil = (medium === 'influencers' || medium === 'prescriptores');
+  const isAfiliacion = (medium === 'afiliacion');
+  const isEmail = (medium === 'email');
+  $('term-row-google').style.display = isGoogle ? 'grid' : 'none';
+  $('term-row-perfil').style.display = isPerfil ? 'grid' : 'none';
+  $('term-row-afiliacion').style.display = isAfiliacion ? 'grid' : 'none';
+  $('term-row-email').style.display = isEmail ? 'grid' : 'none';
+  if(!isGoogle){ $('term').value=''; }
+  if(!isPerfil){ $('perfil').value=''; }
+  if(!isAfiliacion){ $('estrategia-afiliacion').value=''; }
+  if(!isEmail){ $('term-email').value=''; }
+  toggleEstrategiaAfiliacionCustom();
+}
+function toggleTermCustom(){
+  $('term-custom-field').style.display = $('term').value===OTRO ? 'block':'none';
+}
+function toggleEstrategiaAfiliacionCustom(){
+  $('estrategia-afiliacion-custom-field').style.display = $('estrategia-afiliacion').value===OTRO ? 'block':'none';
+}
+refreshSources();
+
+// ---------- INIT: campaign selects ----------
+fillSelect($('marca'), BRANDS, 'v', 'l', null);
+fillSelect($('gerencia'), GERENCIA_OPTIONS, 'v', 'l', 'Selecciona gerencia');
+fillSelect($('asp-plan'), PLAN_OPTIONS, 'v', 'l', 'Selecciona plan (opcional)');
+fillSelect($('asp-modalidad'), MODALIDAD_OPTIONS, 'v', 'l', 'Selecciona modalidad (opcional)');
+fillSelect($('asp-audiencia'), AUDIENCIA_OPTIONS, 'v', 'l', 'Selecciona audiencia (opcional)');
+function refreshProductos(){
+  const items = PRODUCTOS_BY_BRAND[$('marca').value] || [];
+  fillSelect($('producto'), items, 'v', 'l', null);
+}
+function lookupCursoNombre(){
+  const raw = $('producto-libre').value.trim();
+  const hint = $('curso-nombre-hint');
+  hint.classList.remove('hint-error');
+  if(!raw){
+    $('curso-nombre-auto').value = '';
+    hint.textContent = 'Se añade también al utm_campaign, justo después del código.';
+    return;
+  }
+  // Acepta el código con o sin el formato __xxxx__, para que la búsqueda funcione
+  // mientras el account todavía está escribiendo.
+  const code = raw.replace(/^_+|_+$/g, '').toUpperCase();
+  if(code === 'GRAL'){
+    $('curso-nombre-auto').value = '';
+    hint.textContent = '✓ Campaña general, no dirigida a un curso concreto.';
+    return;
+  }
+  const nombre = CURSO_POR_CODIGO[code];
+  if(nombre){
+    $('curso-nombre-auto').value = nombre;
+    hint.textContent = '✓ Curso identificado automáticamente por el código.';
+  } else {
+    $('curso-nombre-auto').value = '';
+    hint.classList.add('hint-error');
+    hint.textContent = '⚠ Código SEPE/acción no válido: no tiene curso asociado en el catálogo. Revísalo (o usa __gral__ si no aplica a un curso concreto).';
+  }
+}
+function updateAspGerenciaFields(){
+  const g = $('gerencia').value;
+  const showSede = g === 'can';
+
+  $('asp-sede-field').style.display = showSede ? 'block' : 'none';
+  if(showSede){
+    fillSelect($('asp-sede'), SEDES_CANARIAS, 'v', 'l', 'Selecciona sede (opcional)');
+    $('asp-sede').disabled = false;
+  } else {
+    $('asp-sede').value = '';
+  }
+
+  // La gerencia ya indica la CCAA (mad, cyl, gal, and, val, mur, can, cat, ast, cnt, pva, ext);
+  // aquí solo mostramos el desglose de provincias de esa CCAA, si existe.
+  // En Canarias no se muestra Provincia porque Sede ya cubre ese nivel de detalle (evita duplicar la misma geografía).
+  const ccaaMatch = (g !== 'can') ? CCAA.find(c => c.v === g) : null;
+  $('asp-ccaa-row').style.display = ccaaMatch ? 'grid' : 'none';
+  if(ccaaMatch){
+    const items = ccaaMatch.provincias.map(p => ({v:p, l:provinciaLabel(p)}));
+    fillSelect($('asp-provincia2'), items, 'v', 'l', 'Selecciona provincia (opcional)');
+    $('asp-provincia2-field').style.display = 'block';
+  } else {
+    $('asp-provincia2').value = '';
+    $('asp-provincia2-field').style.display = 'none';
+  }
+}
+function updateMarcaBadge(){
+  const m = $('marca').value;
+  $('marca-badge').style.backgroundColor = BRAND_COLORS[m] || '#B4B8C4';
+  $('marca-badge').title = BRANDS.find(b=>b.v===m)?.l || '';
+}
+function toggleGerenciaRow(){
+  const isAsp = $('marca').value === 'asp';
+  const isOpf = $('marca').value === 'opf';
+  $('gerencia-row').style.display = isAsp ? 'grid' : 'none';
+  $('asp-plan-row').style.display = isAsp ? 'grid' : 'none';
+  $('asp-modalidad-row').style.display = isAsp ? 'grid' : 'none';
+  $('ambito-section').style.display = (isAsp || isOpf) ? 'none' : 'block';
+  $('producto-select-row').style.display = isAsp ? 'none' : 'grid';
+  $('producto-libre-row').style.display = isAsp ? 'grid' : 'none';
+  if(!isAsp){
+    $('gerencia').value = ''; $('asp-sede').value = ''; $('asp-plan').value = '';
+    $('producto-libre').value = ''; $('asp-expediente').value = ''; $('curso-nombre-auto').value = '';
+    $('asp-provincia2').value = ''; $('asp-modalidad').value = ''; $('asp-audiencia').value = '';
+  }
+  if(isAsp || isOpf){ setAmbito('nacional'); }
+  updateAspGerenciaFields();
+  updateMarcaBadge();
+}
+refreshProductos();
+fillSelect($('tipo'), TIPOS, 'v', 'l', null);
+fillSelect($('objetivo'), OBJETIVOS, 'v', 'l', null);
+fillSelect($('funnel'), FUNNELS, 'v', 'l', null);
+fillSelect($('segmentacion'), SEGMENTACIONES, 'v', 'l', null);
+fillSelect($('ccaa'), CCAA, 'v', 'l', 'Selecciona CCAA');
+
+let ambito = 'nacional';
+function setAmbito(a){
+  ambito = a;
+  document.querySelectorAll('#ambito-row .radio-pill').forEach(p=>{
+    p.classList.toggle('active', p.dataset.ambito===a);
+  });
+  $('ccaa-row').style.display = (a==='ccaa' || a==='provincia') ? 'grid' : 'none';
+  $('provincia-field').style.display = (a==='provincia') ? 'block' : 'none';
+  $('ciudad-row').style.display = (a==='ccaa' || a==='provincia') ? 'grid' : 'none';
+  if(a==='nacional'){ $('ccaa').value=''; }
+  refreshProvincias();
+  render();
+}
+document.querySelectorAll('#ambito-row .radio-pill').forEach(p=>{
+  p.addEventListener('click', ()=>setAmbito(p.dataset.ambito));
+});
+
+
+function refreshProvincias(){
+  const c = CCAA.find(x=>x.v===$('ccaa').value);
+  if(!c){
+    $('provincia').innerHTML = '<option value="">—</option>';
+    return;
+  }
+  const items = c.provincias.map(p=>({v:p,l:provinciaLabel(p)}));
+  fillSelect($('provincia'), items, 'v', 'l', 'Selecciona provincia');
+}
+refreshProvincias();
+
+// ---------- INIT: content ----------
+fillSelect($('formato'), FORMATO_ITEMS, 'v', 'l', 'Selecciona formato');
+
+function updateContentHints(){
+  const cfg = FORMATO_ATTR_HINTS[$('formato').value];
+  if(!cfg){
+    $('attr1').placeholder = 'p. ej. duracion_15s';
+    $('attr1-hint').textContent = 'Elige un formato para ver un ejemplo orientativo.';
+    $('attr2').placeholder = 'p. ej. testimonial';
+    $('attr2-hint').textContent = 'Elige un formato para ver un ejemplo orientativo.';
+    return;
+  }
+  $('attr1').placeholder = 'p. ej. ' + cfg.a1Ph;
+  $('attr1-hint').textContent = cfg.a1Hint;
+  $('attr2').placeholder = 'p. ej. ' + cfg.a2Ph;
+  $('attr2-hint').textContent = cfg.a2Hint;
+}
+updateContentHints();
+
+// ---------- BUILD STRINGS ----------
+function buildCampaign(){
+  const marca = $('marca').value;
+  const isAsp = marca === 'asp';
+  const isOpf = marca === 'opf';
+  const sep = isAsp ? '-' : '_';
+  let ubic = 'esp';
+  if(!isAsp && ambito !== 'nacional' && $('ccaa').value){
+    ubic += sep + $('ccaa').value;
+    if(ambito === 'provincia' && $('provincia').value){
+      ubic += sep + $('provincia').value;
+    }
+    const ciudad = slug($('ciudad').value);
+    if(ciudad) ubic += sep + ciudad;
+  }
+  const productoValRaw = isOpf ? $('producto').value : '';
+  const isOpfEspecifico = isOpf && productoValRaw && !esCategoriaOpf(productoValRaw);
+  const fpaspCodigo = (marca === 'fpasp') ? FPASP_PRODUCTO_CODIGOS[$('producto').value] : null;
+  const producto = isAsp ? slugKeepHyphen($('producto-libre').value)
+    : isOpfEspecifico ? (productoValRaw === 'generico' ? ('_' + productoValRaw + '_') : ('__' + productoValRaw + '__'))
+    : fpaspCodigo ? ('__' + fpaspCodigo + '__' + $('producto').value)
+    : $('producto').value;
+  const tipo = $('tipo').value;
+  const objetivo = $('objetivo').value;
+  const funnel = $('funnel').value;
+  const segmentacion = $('segmentacion').value;
+  const extraRaw = slug($('extra').value);
+
+  const parts = [marca];
+  let missingGerencia = false;
+  let missingOpfProducto = false;
+  if(isAsp){
+    const gerencia = $('gerencia').value;
+    if(!gerencia) missingGerencia = true;
+    parts.push(gerencia);
+    parts.push('esp');
+    if(gerencia){
+      const aspSede = $('asp-sede').value;
+      if(aspSede) parts.push(aspSede);
+    }
+    if(gerencia){
+      const aspProvincia2 = $('asp-provincia2').value;
+      if(aspProvincia2) parts.push(aspProvincia2);
+    }
+    const aspPlan = $('asp-plan').value;
+    if(aspPlan) parts.push(aspPlan);
+    parts.push(buildSource());
+  } else if(isOpfEspecifico){
+    const source = buildSource();
+    if(!source || !producto || !tipo) missingOpfProducto = true;
+    // Se fusiona fuente+ubicación+código+tipo en un único elemento (sin separador
+    // automático entre ellos) para que el guion bajo doble propio de
+    // __codigo__ no se sume al separador normal y queden 3 guiones en vez de 2.
+    // El propio __ __ del código hace de separador con lo que va antes y después.
+    parts.push(source + '_' + ubic + producto + tipo);
+  } else {
+    parts.push(buildSource());
+    parts.push(ubic);
+  }
+  if(!isOpfEspecifico){
+    if(producto.startsWith('__')){
+      // El propio __ del valor ya hace de separador con lo anterior.
+      parts[parts.length-1] += producto;
+    } else {
+      parts.push(producto);
+    }
+  }
+  if(isAsp){
+    const cursoNombre = slug($('curso-nombre-auto').value);
+    if(cursoNombre) parts.push(cursoNombre);
+    const aspExpediente = slug($('asp-expediente').value);
+    if(aspExpediente) parts.push(aspExpediente);
+    const aspModalidad = $('asp-modalidad').value;
+    if(aspModalidad) parts.push(aspModalidad);
+    const aspAudiencia = $('asp-audiencia').value;
+    if(aspAudiencia) parts.push(aspAudiencia);
+  }
+  if(isOpfEspecifico){ parts.push(objetivo, funnel); } else { parts.push(tipo, objetivo, funnel); }
+  const basePartsNoSeg = parts.slice();
+  parts.push(segmentacion);
+
+  const missing = parts.some(p=>!p) || missingGerencia || missingOpfProducto ||
+    (!isAsp && ambito!=='nacional' && !$('ccaa').value) || (!isAsp && ambito==='provincia' && !$('provincia').value);
+  let str = parts.join(sep);
+  if(extraRaw) str += sep + extraRaw;
+
+  let campanaName = basePartsNoSeg.some(p=>!p) ? '' : basePartsNoSeg.join(sep);
+  if(campanaName && extraRaw) campanaName += sep + extraRaw;
+  let grupoName = (campanaName && segmentacion) ? campanaName + sep + segmentacion : '';
+
+  return {str, missing, sep, campanaName, grupoName};
+}
+
+function buildContent(){
+  const formato = slug($('formato').value);
+  if(!formato) return {str:'', missing:true};
+  const parts = [formato];
+  const attr1 = slug($('attr1').value);
+  const attr2 = slug($('attr2').value);
+  if(attr1) parts.push(attr1);
+  if(attr2) parts.push(attr2);
+  return {str:parts.join('_'), missing:false};
+}
+
+function buildSource(){
+  return $('source').value;
+}
+
+function buildTerm(){
+  const medium = $('medium').value;
+  if(medium === 'influencers' || medium === 'prescriptores'){
+    return slug($('perfil').value);
+  }
+  if(medium === 'afiliacion'){
+    let estrategia = $('estrategia-afiliacion').value;
+    if(!estrategia) return '';
+    if(estrategia === OTRO){ estrategia = slug($('estrategia-afiliacion-custom').value); }
+    return estrategia;
+  }
+  if(medium === 'email'){
+    return slug($('term-email').value);
+  }
+  if($('source').value !== 'google') return '';
+  let term = $('term').value;
+  if(!term) return '';
+  if(term === OTRO){ term = slug($('term-custom').value); }
+  return term;
+}
+
+function chip(label, color){
+  const style = color ? ` style="background:${color}"` : '';
+  const cls = color ? 'chip' : 'chip empty';
+  return `<span class="${cls}"${style}>${label}</span>`;
+}
+
+function render(){
+  const medium = $('medium').value;
+  const source = buildSource();
+  const term = buildTerm();
+  const camp = buildCampaign();
+  const cont = buildContent();
+
+  $('out-medium').textContent = medium || '—';
+  $('out-source').textContent = source || '—';
+  const showTermPreview = $('source').value==='google' || medium==='influencers' || medium==='prescriptores' || medium==='afiliacion' || medium==='email';
+  $('term-preview-row').style.display = showTermPreview ? 'flex' : 'none';
+  $('out-term').textContent = term || '—';
+  $('out-campaign').textContent = camp.str.replace(/^[-_]+|[-_]+$/g,'') || '—';
+  $('out-content').textContent = cont.str || '—';
+
+  let chipsHtml = '';
+  chipsHtml += medium ? chip(medium, '#006AE4') : chip('utm_medium');
+  chipsHtml += source ? chip(source, '#0EA5B7') : chip('utm_source');
+  chipsHtml += (camp.str && !camp.missing) ? chip('campaign ✓', '#D6572E') : chip('utm_campaign');
+  chipsHtml += (cont.str && !cont.missing) ? chip('content ✓', '#1A9E6C') : chip('utm_content');
+  $('chips').innerHTML = chipsHtml;
+
+  const destUrl = $('dest-url').value.trim();
+  const validation = $('validation');
+  let msgs = [];
+  if(!medium || !source) msgs.push('Falta seleccionar medio y/o fuente.');
+  const marcaVal = $('marca').value;
+  if(marcaVal !== 'asp' && ambito!=='nacional' && !$('ccaa').value) msgs.push('Selecciona la CCAA o vuelve a Nacional.');
+  if(marcaVal !== 'asp' && ambito==='provincia' && !$('provincia').value) msgs.push('Selecciona la provincia o cambia a ámbito Autonómico.');
+  if(camp.missing) msgs.push('Faltan campos obligatorios en la campaña (producto/tipo/objetivo/funnel/segmentación, y gerencia si la marca es Aspasia).');
+  if(cont.missing) msgs.push('Falta seleccionar el formato de la creatividad.');
+  let productoPatternWarning = '';
+  let cursoCodigoInvalido = '';
+  if(marcaVal === 'asp'){
+    const prodLibre = $('producto-libre').value.trim();
+    if(prodLibre && !/^__.+__$/.test(prodLibre)){
+      productoPatternWarning = 'El código SEPE/acción no sigue el patrón __xxxx__ (debe empezar y terminar en doble guion bajo).';
+      msgs.push(productoPatternWarning);
+    }
+    if(prodLibre){
+      const code = prodLibre.replace(/^_+|_+$/g, '').toUpperCase();
+      if(code !== 'GRAL' && !CURSO_POR_CODIGO[code]){
+        cursoCodigoInvalido = 'El código SEPE/acción no tiene curso asociado en el catálogo (usa __gral__ si no aplica a un curso concreto).';
+        msgs.push(cursoCodigoInvalido);
+      }
+    }
+  }
+  if(!destUrl) msgs.push('Sin URL de destino: se generará solo la cadena de parámetros UTM.');
+
+  const ready = medium && source && !camp.missing && !cont.missing &&
+    !(marcaVal !== 'asp' && ambito!=='nacional' && !$('ccaa').value) && !(marcaVal !== 'asp' && ambito==='provincia' && !$('provincia').value);
+  $('btn-copy').disabled = !ready;
+
+  validation.innerHTML = msgs.length
+    ? `<div class="msg warn">${msgs.join(' ')}</div>`
+    : `<div class="msg ok">Listo para copiar.</div>`;
+
+  if(ready){
+    let params = `utm_medium=${encodeURIComponent(medium)}&utm_source=${encodeURIComponent(source)}`;
+    if(term) params += `&utm_term=${encodeURIComponent(term)}`;
+    params += `&utm_campaign=${encodeURIComponent(camp.str)}&utm_content=${encodeURIComponent(cont.str)}`;
+    const full = destUrl ? `${destUrl}${destUrl.includes('?')?'&':'?'}${params}` : params;
+    $('out-url').textContent = full;
+    $('out-url')._current = full;
+  } else {
+    $('out-url').textContent = 'Completa el formulario para generar la URL…';
+    $('out-url')._current = '';
+  }
+
+  // ---- Nombres y UTM creados ----
+  const banner = $('validador-banner');
+  if(ready){
+    const sep = camp.sep;
+    const contentForName = cont.str.replace(/_/g, sep);
+    const anuncioName = camp.grupoName ? (camp.grupoName + sep + contentForName) : '';
+
+    $('out-name-campana').textContent = camp.campanaName || '—';
+    $('out-name-grupo').textContent = camp.grupoName || '—';
+    $('out-name-anuncio').textContent = anuncioName || '—';
+    $('out-name-utm').textContent = $('out-url')._current
+      ? $('out-url')._current.split('?').slice(1).join('?') || $('out-url')._current
+      : '—';
+    $('out-name-urlfinal').textContent = $('out-url')._current || '—';
+
+    if(cursoCodigoInvalido){
+      banner.className = 'msg error';
+      banner.textContent = '⚠ ' + cursoCodigoInvalido;
+    } else if(productoPatternWarning){
+      banner.className = 'msg warn';
+      banner.textContent = '⚠ ' + productoPatternWarning;
+    } else {
+      banner.className = 'msg ok';
+      banner.textContent = '✓ Todo correcto — la estructura es válida y cumple con los estándares corporativos.';
+    }
+  } else {
+    $('out-name-campana').textContent = '—';
+    $('out-name-grupo').textContent = '—';
+    $('out-name-anuncio').textContent = '—';
+    $('out-name-utm').textContent = '—';
+    $('out-name-urlfinal').textContent = '—';
+    banner.className = 'msg warn';
+    banner.textContent = msgs.length ? msgs.join(' ') : 'Completa el formulario para validar la estructura.';
+  }
+}
+
+// ---------- LOG + HISTÓRICO PERSISTENTE (backend real en Netlify) ----------
+const logEntries = [];
+
+async function persistEntry(entry){
+  // Guardado compartido real: llama a la función serverless (Netlify Blobs).
+  // Si falla (sin red, función caída...), no rompe la app: sigue en el histórico de sesión.
+  try{
+    const res = await fetch('/api/historial', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ marca: entry.marca, entry }),
+    });
+    if(!res.ok) console.warn('No se pudo guardar en el histórico compartido:', res.status);
+  } catch(e){ console.warn('Histórico compartido no disponible:', e); }
+}
+
+async function loadHistorialCompartido(){
+  try{
+    const res = await fetch('/api/historial');
+    if(!res.ok) return;
+    const data = await res.json();
+    logEntries.length = 0;
+    Object.keys(data).forEach(marca=>{
+      (data[marca]||[]).forEach((e, idx) => logEntries.push({...e, _marca: marca, _idx: idx}));
+    });
+    renderLog();
+  } catch(e){ /* sin conexión al histórico compartido en este momento */ }
+}
+
+async function addToLog(){
+  const url = $('out-url')._current;
+  if(!url) return;
+  const now = new Date();
+  const entry = {
+    hora: now.toLocaleString('es-ES', {day:'2-digit', month:'2-digit', year:'2-digit', hour:'2-digit', minute:'2-digit'}),
+    marca: $('marca').value,
+    campana: $('out-name-campana').textContent,
+    grupo: $('out-name-grupo').textContent,
+    anuncio: $('out-name-anuncio').textContent,
+    campaign: $('out-campaign').textContent,
+    content: $('out-content').textContent,
+    url,
+  };
+  logEntries.push(entry);
+  renderLog();
+  await persistEntry(entry);
+  await loadHistorialCompartido();
+}
+function renderLog(){
+  $('log-empty').style.display = logEntries.length ? 'none':'block';
+  $('log-table').style.display = logEntries.length ? 'table':'none';
+  $('btn-export').style.display = logEntries.length ? 'inline-block':'none';
+  $('btn-export-excel').style.display = logEntries.length ? 'inline-block':'none';
+  const body = $('log-body');
+  body.innerHTML = '';
+  logEntries.forEach((e,i)=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${e.hora}</td><td>${e.marca}</td><td>${e.campaign}</td><td>${e.content}</td><td>${e.url}</td><td class="del" data-i="${i}" title="Borrar del histórico compartido">✕</td>`;
+    body.appendChild(tr);
+  });
+  body.querySelectorAll('.del').forEach(td=>{
+    td.addEventListener('click', async ()=>{
+      const i = parseInt(td.dataset.i,10);
+      const entry = logEntries[i];
+      const ok = confirm('¿Seguro que quieres borrar esta URL del histórico compartido? Esta acción no se puede deshacer.');
+      if(!ok) return;
+      td.textContent = '…';
+      if(entry._marca !== undefined && entry._idx !== undefined){
+        try{
+          const res = await fetch(`/api/historial?marca=${encodeURIComponent(entry._marca)}&index=${encodeURIComponent(entry._idx)}`, { method: 'DELETE' });
+          if(!res.ok){ alert('No se pudo borrar del histórico compartido. Inténtalo de nuevo.'); td.textContent = '✕'; return; }
+        } catch(e){ alert('No se pudo borrar del histórico compartido (sin conexión). Inténtalo de nuevo.'); td.textContent = '✕'; return; }
+        await loadHistorialCompartido();
+      } else {
+        // Entrada solo local (aún no persistida): se quita sin más
+        logEntries.splice(i,1);
+        renderLog();
+      }
+    });
+  });
+}
+function exportCsv(){
+  const header = 'hora,marca,campana,grupo_anuncio,anuncio,utm_campaign,utm_content,url\n';
+  const rows = logEntries.map(e=>`"${e.hora}","${e.marca}","${e.campana}","${e.grupo}","${e.anuncio}","${e.campaign}","${e.content}","${e.url}"`).join('\n');
+  const blob = new Blob([header+rows], {type:'text/csv;charset=utf-8;'});
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  const stamp = new Date().toISOString().slice(0,10);
+  link.download = `utms_generador_${stamp}.csv`;
+  link.click();
+}
+function sheetSafeName(name){
+  return name.replace(/[:\\\/\?\*\[\]]/g, ' ').slice(0, 31) || 'Marca';
+}
+function exportExcelHistorico(){
+  if(typeof XLSX === 'undefined'){
+    alert('No se pudo cargar la librería de Excel (sin conexión a internet). Prueba a exportar en CSV mientras tanto.');
+    return;
+  }
+  const wb = XLSX.utils.book_new();
+  const headers = ['Hora','Campaña','Grupo de anuncios','Anuncio','utm_campaign','utm_content','URL'];
+  BRANDS.forEach(b=>{
+    const rows = logEntries.filter(e => e.marca === b.v).map(e => [
+      e.hora, e.campana, e.grupo, e.anuncio, e.campaign, e.content, e.url
+    ]);
+    const data = [headers, ...rows];
+    const ws = XLSX.utils.aoa_to_sheet(data);
+    ws['!cols'] = [{wch:14},{wch:30},{wch:34},{wch:38},{wch:34},{wch:20},{wch:50}];
+    XLSX.utils.book_append_sheet(wb, ws, sheetSafeName(b.l));
+  });
+  const stamp = new Date().toISOString().slice(0,10);
+  XLSX.writeFile(wb, `historico_urls_grupo_aspasia_${stamp}.xlsx`);
+}
+
+// ---------- EVENTS ----------
+$('medium').addEventListener('change', ()=>{ refreshSources(); render(); });
+$('source').addEventListener('change', ()=>{ toggleTermRow(); render(); });
+$('term').addEventListener('change', ()=>{ toggleTermCustom(); render(); });
+$('term-custom').addEventListener('input', render);
+$('perfil').addEventListener('input', render);
+$('estrategia-afiliacion').addEventListener('change', ()=>{ toggleEstrategiaAfiliacionCustom(); render(); });
+$('estrategia-afiliacion-custom').addEventListener('input', render);
+$('term-email').addEventListener('input', render);
+
+['tipo','objetivo','funnel','segmentacion','extra','dest-url'].forEach(id=>{
+  $(id).addEventListener('change', render);
+  $(id).addEventListener('input', render);
+});
+$('ccaa').addEventListener('change', ()=>{ refreshProvincias(); render(); });
+$('provincia').addEventListener('change', render);
+$('ciudad').addEventListener('input', render);
+$('marca').addEventListener('change', ()=>{ refreshProductos(); toggleGerenciaRow(); refreshSources(); render(); });
+$('producto').addEventListener('change', render);
+$('producto-libre').addEventListener('input', ()=>{ lookupCursoNombre(); render(); });
+$('curso-nombre-auto').addEventListener('input', render);
+$('gerencia').addEventListener('change', ()=>{ updateAspGerenciaFields(); render(); });
+$('asp-sede').addEventListener('change', render);
+$('asp-provincia2').addEventListener('change', render);
+$('asp-plan').addEventListener('change', render);
+$('asp-expediente').addEventListener('input', render);
+$('asp-modalidad').addEventListener('change', render);
+$('asp-audiencia').addEventListener('change', render);
+
+$('formato').addEventListener('change', ()=>{ updateContentHints(); render(); });
+['attr1','attr2'].forEach(id=>{
+  $(id).addEventListener('change', render);
+  $(id).addEventListener('input', render);
+});
+
+$('btn-copy').addEventListener('click', ()=>{
+  const url = $('out-url')._current;
+  if(!url) return;
+  navigator.clipboard.writeText(url).then(()=>{
+    const btn = $('btn-copy');
+    const original = btn.textContent;
+    btn.textContent = '¡Copiado y guardado!';
+    setTimeout(()=>btn.textContent = original, 1600);
+  });
+  addToLog();
+});
+$('btn-export').addEventListener('click', exportCsv);
+$('btn-export-excel').addEventListener('click', exportExcelHistorico);
+document.querySelectorAll('.btn-copy-mini').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    const targetId = btn.dataset.copy;
+    const text = $(targetId).textContent;
+    if(!text || text === '—') return;
+    navigator.clipboard.writeText(text).then(()=>{
+      const original = btn.textContent;
+      btn.textContent = '¡Copiado!';
+      setTimeout(()=>btn.textContent = original, 1400);
+    });
+  });
+});
+$('btn-reset').addEventListener('click', ()=>{
+  $('medium').selectedIndex = 0; refreshSources();
+  setAmbito('nacional');
+  $('ciudad').value='';
+  $('marca').selectedIndex = 0; refreshProductos(); toggleGerenciaRow();
+  $('extra').value=''; $('dest-url').value='';
+  $('formato').selectedIndex = 0;
+  $('attr1').value=''; $('attr2').value='';
+  updateContentHints();
+  $('perfil').value='';
+  $('estrategia-afiliacion').selectedIndex = 0; $('estrategia-afiliacion-custom').value='';
+  render();
+});
+
+toggleGerenciaRow();
+render();
+loadHistorialCompartido();
+</script>
+</body>
+</html>
