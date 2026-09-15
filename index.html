@@ -671,30 +671,36 @@ const AUDIENCIA_OPTIONS = [
   {v:'trab', l:'Trabajadores'},
 ];
 
-// Códigos de producto de FP Aspasia: solo se añaden (entre __ __, antes del
-// nombre de producto) para los cursos de este listado. Las variantes
-// presenciales llevan el mismo código que su versión online. El resto de
-// productos de la marca (incluido 'gral') se quedan igual.
-const FPASP_PRODUCTO_CODIGOS = {
-  smr: 'IFC-12142001-N2-V1',
-  an3d: 'IMS-12241904-N3-V1',
-  asir: 'IFC-12242001-N3-V1',
-  comint: 'COM-12242201-N3-V1',
-  comint_presen: 'COM-12242201-N3-V1',
-  dietet: 'SAN-12201952-N3-V1',
-  dircocina: 'HOT-12242404-N3-V1',
-  dircocina_presen: 'HOT-12242404-N3-V1',
-  peluq: 'IMP-12240502-N3-V1',
-  patmoda: 'TCP-12241701-N3-V1',
-  patmoda_presen: 'TCP-12241701-N3-V1',
-  translog: 'COM-12242204-N3-V1',
-  adminfin: 'ADG-12242102-N3-V1',
-  adminfin_presen: 'ADG-12242102-N3-V1',
-  infantil: 'SSC-12242301-N3-V1',
-  dam: 'IFC-12242002-N3-V1',
-  daw: 'IFC-12242003-N3-V1',
-  marketing: 'COM-12242203-N3-V1',
-  marketing_presen: 'COM-12242203-N3-V1',
+// Códigos de producto por marca: solo se añaden (entre __ __, antes del
+// nombre de producto) para los cursos que aparecen aquí. El resto de
+// productos de cada marca (incluido 'gral') se quedan igual.
+const PRODUCTO_CODIGOS_POR_MARCA = {
+  fpasp: {
+    smr: 'IFC-12142001-N2-V1',
+    an3d: 'IMS-12241904-N3-V1',
+    asir: 'IFC-12242001-N3-V1',
+    comint: 'COM-12242201-N3-V1',
+    comint_presen: 'COM-12242201-N3-V1',
+    dietet: 'SAN-12201952-N3-V1',
+    dircocina: 'HOT-12242404-N3-V1',
+    dircocina_presen: 'HOT-12242404-N3-V1',
+    peluq: 'IMP-12240502-N3-V1',
+    patmoda: 'TCP-12241701-N3-V1',
+    patmoda_presen: 'TCP-12241701-N3-V1',
+    translog: 'COM-12242204-N3-V1',
+    adminfin: 'ADG-12242102-N3-V1',
+    adminfin_presen: 'ADG-12242102-N3-V1',
+    infantil: 'SSC-12242301-N3-V1',
+    dam: 'IFC-12242002-N3-V1',
+    daw: 'IFC-12242003-N3-V1',
+    marketing: 'COM-12242203-N3-V1',
+    marketing_presen: 'COM-12242203-N3-V1',
+  },
+  rfk: {
+    ia_ventas: 'RFK-EIA-VE-001',
+    ia_marketing: 'RFK-EIA-MK-001',
+    ia_direccion_gestion: 'RFK-EIA-DG-001',
+  },
 };
 
 const BRANDS = [
@@ -843,6 +849,9 @@ const PRODUCTOS_BY_BRAND = {
     {v:'gral', l:'Marca general (sin producto concreto)'},
   ],
   rfk: [
+    {v:'ia_ventas', l:'IA aplicada a Ventas'},
+    {v:'ia_marketing', l:'IA aplicada a Marketing'},
+    {v:'ia_direccion_gestion', l:'IA aplicada a Dirección y Gestión'},
     {v:'gral', l:'Marca general (sin producto concreto)'},
   ],
 };
@@ -1104,10 +1113,11 @@ function buildCampaign(){
   }
   const productoValRaw = isOpf ? $('producto').value : '';
   const isOpfEspecifico = isOpf && productoValRaw && !esCategoriaOpf(productoValRaw);
-  const fpaspCodigo = (marca === 'fpasp') ? FPASP_PRODUCTO_CODIGOS[$('producto').value] : null;
+  const codigoMapMarca = PRODUCTO_CODIGOS_POR_MARCA[marca];
+  const productoCodigo = codigoMapMarca ? codigoMapMarca[$('producto').value] : null;
   const producto = isAsp ? slugKeepHyphen($('producto-libre').value)
     : isOpfEspecifico ? (productoValRaw === 'generico' ? ('_' + productoValRaw + '_') : ('__' + productoValRaw + '__'))
-    : fpaspCodigo ? ('__' + fpaspCodigo + '__' + $('producto').value)
+    : productoCodigo ? ('__' + productoCodigo + '__' + $('producto').value)
     : $('producto').value;
   const tipo = $('tipo').value;
   const objetivo = $('objetivo').value;
