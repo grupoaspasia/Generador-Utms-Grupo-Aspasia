@@ -1133,6 +1133,15 @@ function buildCampaign(){
   const segmentacion = $('segmentacion').value;
   const extraRaw = slug($('extra').value);
 
+  // Si la fuente es Google, el tipo de campaña (search/pmax/demand_gen/...) se
+  // añade también dentro del utm_campaign, justo después de la fuente.
+  let googleTermForCampaign = '';
+  if($('source').value === 'google'){
+    let t = $('term').value;
+    if(t === OTRO){ t = slug($('term-custom').value); }
+    if(t) googleTermForCampaign = t;
+  }
+
   const parts = [marca];
   let missingGerencia = false;
   let missingOpfProducto = false;
@@ -1152,8 +1161,9 @@ function buildCampaign(){
     const aspPlan = $('asp-plan').value;
     if(aspPlan) parts.push(aspPlan);
     parts.push(buildSource());
+    if(googleTermForCampaign) parts.push(googleTermForCampaign);
   } else if(isOpfEspecifico){
-    const source = buildSource();
+    const source = buildSource() + (googleTermForCampaign ? '_' + googleTermForCampaign : '');
     if(!source || !producto || !tipo) missingOpfProducto = true;
     // Se fusiona fuente+ubicación+código+tipo en un único elemento (sin separador
     // automático entre ellos) para que el guion bajo doble propio de
@@ -1162,6 +1172,7 @@ function buildCampaign(){
     parts.push(source + '_' + ubic + producto + tipo);
   } else {
     parts.push(buildSource());
+    if(googleTermForCampaign) parts.push(googleTermForCampaign);
     parts.push(ubic);
   }
   if(!isOpfEspecifico){
