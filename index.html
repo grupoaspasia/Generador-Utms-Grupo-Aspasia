@@ -235,8 +235,8 @@
         <div class="grid2" id="term-row-email" style="display:none;">
           <div class="field">
             <label for="term-email">utm_term <span class="opt">(opcional)</span></label>
-            <input type="text" id="term-email" placeholder="p. ej. newsletter_octubre">
-            <div class="hint">Identificador libre del envío/segmento de email. Minúsculas, sin tildes, "_" entre palabras.</div>
+            <input type="text" id="term-email" placeholder="p. ej. segmento_a">
+            <div class="hint">Campo libre opcional (segmento, variante, palabra clave, envío...). Minúsculas, sin tildes, "_" entre palabras.</div>
           </div>
           <div></div>
         </div>
@@ -943,15 +943,17 @@ function toggleTermRow(){
   const srcVal = $('source').value;
   const isPerfil = (srcVal === 'influencers' || srcVal === 'prescriptores');
   const isAfiliacion = (medium === 'afiliacion');
-  const isEmail = (medium === 'email');
+  // Campo libre opcional: aparece en cualquier combinación que no tenga ya un campo
+  // de utm_term específico (Google, influencers/prescriptores, afiliación).
+  const isGenericTerm = !isGoogle && !isPerfil && !isAfiliacion;
   $('term-row-google').style.display = isGoogle ? 'grid' : 'none';
   $('term-row-perfil').style.display = isPerfil ? 'grid' : 'none';
   $('term-row-afiliacion').style.display = isAfiliacion ? 'grid' : 'none';
-  $('term-row-email').style.display = isEmail ? 'grid' : 'none';
+  $('term-row-email').style.display = isGenericTerm ? 'grid' : 'none';
   if(!isGoogle){ $('term').value=''; }
   if(!isPerfil){ $('perfil').value=''; }
   if(!isAfiliacion){ $('estrategia-afiliacion').value=''; }
-  if(!isEmail){ $('term-email').value=''; }
+  if(!isGenericTerm){ $('term-email').value=''; }
   toggleEstrategiaAfiliacionCustom();
 }
 function toggleTermCustom(){
@@ -1235,10 +1237,9 @@ function buildTerm(){
     if(estrategia === OTRO){ estrategia = slug($('estrategia-afiliacion-custom').value); }
     return estrategia;
   }
-  if(medium === 'email'){
+  if($('source').value !== 'google'){
     return slug($('term-email').value);
   }
-  if($('source').value !== 'google') return '';
   let term = $('term').value;
   if(!term) return '';
   if(term === OTRO){ term = slug($('term-custom').value); }
@@ -1260,7 +1261,7 @@ function render(){
 
   $('out-medium').textContent = medium || '—';
   $('out-source').textContent = source || '—';
-  const showTermPreview = $('source').value==='google' || $('source').value==='influencers' || $('source').value==='prescriptores' || medium==='afiliacion' || medium==='email';
+  const showTermPreview = true;
   $('term-preview-row').style.display = showTermPreview ? 'flex' : 'none';
   $('out-term').textContent = term || '—';
   $('out-campaign').textContent = camp.str.replace(/^[-_]+|[-_]+$/g,'') || '—';
@@ -1539,7 +1540,7 @@ $('btn-reset').addEventListener('click', ()=>{
   $('formato').selectedIndex = 0;
   $('attr1').value=''; $('attr2').value='';
   updateContentHints();
-  $('perfil').value='';
+  $('perfil').value=''; $('term-email').value='';
   $('estrategia-afiliacion').selectedIndex = 0; $('estrategia-afiliacion-custom').value='';
   render();
 });
