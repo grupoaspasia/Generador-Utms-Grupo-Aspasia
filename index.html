@@ -215,7 +215,7 @@
         </div>
         <div class="grid2" id="term-row-perfil" style="display:none;">
           <div class="field">
-            <label for="perfil">utm_term — perfil / nombre <span class="opt">(recomendado)</span></label>
+            <label for="perfil">utm_term — nombre del influencer / prescriptor <span class="opt">(recomendado)</span></label>
             <input type="text" id="perfil" placeholder="p. ej. maria_garcia, juan_lopez">
             <div class="hint">Identifica al influencer o prescriptor concreto con su nombre. Todo en minúsculas y sin tildes; varias palabras separadas por "_".</div>
           </div>
@@ -591,9 +591,7 @@ const MEDIUMS = [
   {v:'afiliacion', l:'Afiliación', sources:['antevenio','arkeero','across','emagister','educaweb','ignium','dolead']},
   {v:'email', l:'Email', sources:['ima','ima_mkt','mcp','ac']},
   {v:'organic_social', l:'Organic social', sources:['meta','tiktok','linkedin']},
-  {v:'influencers', l:'Influencers', sources:['instagram','tiktok','youtube','twitch']},
-  {v:'prescriptores', l:'Prescriptores', sources:['instagram','tiktok','youtube','blog']},
-  {v:'referral', l:'Referral', sources:['elpais','elmundo','abc','lavanguardia','elconfidencial','eldiario','20minutos','marca','elespanol','antena3','telecinco','rtve']},
+  {v:'referral', l:'Referral', sources:['influencers','prescriptores','elpais','elmundo','abc','lavanguardia','elconfidencial','eldiario','20minutos','marca','elespanol','antena3','telecinco','rtve']},
   {v:'offline', l:'Offline', sources:['ooh','btl','feria']},
 ];
 
@@ -942,7 +940,8 @@ function refreshSources(){
 function toggleTermRow(){
   const isGoogle = $('source').value === 'google';
   const medium = $('medium').value;
-  const isPerfil = (medium === 'influencers' || medium === 'prescriptores');
+  const srcVal = $('source').value;
+  const isPerfil = (srcVal === 'influencers' || srcVal === 'prescriptores');
   const isAfiliacion = (medium === 'afiliacion');
   const isEmail = (medium === 'email');
   $('term-row-google').style.display = isGoogle ? 'grid' : 'none';
@@ -1226,7 +1225,8 @@ function buildSource(){
 
 function buildTerm(){
   const medium = $('medium').value;
-  if(medium === 'influencers' || medium === 'prescriptores'){
+  const srcValTerm = $('source').value;
+  if(srcValTerm === 'influencers' || srcValTerm === 'prescriptores'){
     return slug($('perfil').value);
   }
   if(medium === 'afiliacion'){
@@ -1260,7 +1260,7 @@ function render(){
 
   $('out-medium').textContent = medium || '—';
   $('out-source').textContent = source || '—';
-  const showTermPreview = $('source').value==='google' || medium==='influencers' || medium==='prescriptores' || medium==='afiliacion' || medium==='email';
+  const showTermPreview = $('source').value==='google' || $('source').value==='influencers' || $('source').value==='prescriptores' || medium==='afiliacion' || medium==='email';
   $('term-preview-row').style.display = showTermPreview ? 'flex' : 'none';
   $('out-term').textContent = term || '—';
   $('out-campaign').textContent = camp.str.replace(/^[-_]+|[-_]+$/g,'') || '—';
