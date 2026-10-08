@@ -215,9 +215,9 @@
         </div>
         <div class="grid2" id="term-row-perfil" style="display:none;">
           <div class="field">
-            <label for="perfil">utm_term — nombre del influencer / prescriptor <span class="opt">(recomendado)</span></label>
+            <label for="perfil"><span id="perfil-label-text">utm_term — nombre del influencer / prescriptor</span> <span class="opt">(recomendado)</span></label>
             <input type="text" id="perfil" placeholder="p. ej. maria_garcia, juan_lopez">
-            <div class="hint">Identifica al influencer o prescriptor concreto con su nombre. Todo en minúsculas y sin tildes; varias palabras separadas por "_".</div>
+            <div class="hint" id="perfil-hint">Identifica al influencer o prescriptor concreto con su nombre. Todo en minúsculas y sin tildes; varias palabras separadas por "_".</div>
           </div>
           <div></div>
         </div>
@@ -591,7 +591,7 @@ const MEDIUMS = [
   {v:'afiliacion', l:'Afiliación', sources:['antevenio','arkeero','across','emagister','educaweb','ignium','dolead']},
   {v:'email', l:'Email', sources:['ima','ima_mkt','mcp','ac']},
   {v:'organic_social', l:'Organic social', sources:['meta','tiktok','linkedin']},
-  {v:'referral', l:'Referral', sources:['influencers','prescriptores','elpais','elmundo','abc','lavanguardia','elconfidencial','eldiario','20minutos','marca','elespanol','antena3','telecinco','rtve']},
+  {v:'referral', l:'Referral', sources:['influencers','prescriptores','medio']},
   {v:'offline', l:'Offline', sources:['ooh','btl','feria']},
 ];
 
@@ -942,7 +942,18 @@ function toggleTermRow(){
   const isGoogle = $('source').value === 'google';
   const medium = $('medium').value;
   const srcVal = $('source').value;
-  const isPerfil = (srcVal === 'influencers' || srcVal === 'prescriptores');
+  const isPerfil = (srcVal === 'influencers' || srcVal === 'prescriptores' || srcVal === 'medio');
+  if(isPerfil){
+    const esMedio = srcVal === 'medio';
+    $('perfil-label-text').textContent = esMedio ? 'utm_term — nombre del medio' : 'utm_term — nombre del influencer / prescriptor';
+    $('perfil').placeholder = esMedio ? 'p. ej. el_pais, el_mundo, 20_minutos' : 'p. ej. maria_garcia, juan_lopez';
+    $('perfil-hint').textContent = esMedio
+      ? 'Nombre del medio de comunicación donde sale la acción. Todo en minúsculas y sin tildes; varias palabras separadas por "_".'
+      : 'Identifica al influencer o prescriptor concreto con su nombre. Todo en minúsculas y sin tildes; varias palabras separadas por "_".';
+    // Si se cambia entre influencers / prescriptores / medio, se vacía el nombre para no arrastrar uno que no corresponde.
+    if($('perfil').dataset.src && $('perfil').dataset.src !== srcVal){ $('perfil').value = ''; }
+    $('perfil').dataset.src = srcVal;
+  } else { delete $('perfil').dataset.src; }
   const isAfiliacion = (medium === 'afiliacion');
   // Campo libre opcional: aparece en cualquier combinación que no tenga ya un campo
   // de utm_term específico (Google, influencers/prescriptores, afiliación).
@@ -1229,7 +1240,7 @@ function buildSource(){
 function buildTerm(){
   const medium = $('medium').value;
   const srcValTerm = $('source').value;
-  if(srcValTerm === 'influencers' || srcValTerm === 'prescriptores'){
+  if(srcValTerm === 'influencers' || srcValTerm === 'prescriptores' || srcValTerm === 'medio'){
     return slug($('perfil').value);
   }
   if(medium === 'afiliacion'){
