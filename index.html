@@ -931,7 +931,7 @@ function refreshSources(){
   const m = MEDIUMS.find(x=>x.v===$('medium').value);
   let sources = m ? m.sources : [];
   // Fuentes que solo existen para la marca Aspasia; para el resto de marcas se ocultan.
-  const soloAspasia = ['ima_mkt', 'whatsapp'];
+  const soloAspasia = ['ima_mkt'];
   if($('marca').value !== 'asp'){
     sources = sources.filter(s => !soloAspasia.includes(s));
   }
