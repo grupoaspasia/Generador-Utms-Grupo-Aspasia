@@ -223,12 +223,12 @@
         </div>
         <div class="grid2" id="term-row-afiliacion" style="display:none;">
           <div class="field">
-            <label for="estrategia-afiliacion">utm_term — estrategia de afiliación <span class="opt">(recomendado)</span></label>
+            <label for="estrategia-afiliacion">utm_term — proveedor de afiliación <span class="opt">(recomendado)</span></label>
             <select id="estrategia-afiliacion"></select>
           </div>
           <div class="field" id="estrategia-afiliacion-custom-field" style="display:none;">
-            <label for="estrategia-afiliacion-custom">Especifica la estrategia</label>
-            <input type="text" id="estrategia-afiliacion-custom" placeholder="p. ej. programa_referidos">
+            <label for="estrategia-afiliacion-custom">Especifica el proveedor</label>
+            <input type="text" id="estrategia-afiliacion-custom" placeholder="p. ej. nuevo_proveedor">
             <div class="hint">Todo en minúsculas y sin tildes. Si son varias palabras, sepáralas con "_".</div>
           </div>
         </div>
@@ -588,7 +588,7 @@ const FORMATO_ITEMS = [
 const MEDIUMS = [
   {v:'paid_social', l:'Paid social', sources:['meta','tiktok','linkedin']},
   {v:'paid_search', l:'Paid search', sources:['google','bing','youtube','chatgptads']},
-  {v:'afiliacion', l:'Afiliación', sources:['antevenio','arkeero','across','emagister','educaweb','ignium','dolead']},
+  {v:'afiliacion', l:'Afiliación', sources:['email','native','cashbacks','portales','vouchercode','contenido']},
   {v:'email', l:'Email', sources:['ima','ima_mkt','mcp','ac']},
   {v:'organic_social', l:'Organic social', sources:['meta','tiktok','linkedin']},
   {v:'referral', l:'Referral', sources:['influencers','prescriptores','medio','whatsapp']},
@@ -604,18 +604,16 @@ const TERM_OPTIONS = [
   {v:'shopping', l:'Shopping'},
 ];
 
+// Proveedor de afiliación: va en utm_term. Si entra uno nuevo se puede escribir con '+ Otro proveedor'.
 const AFILIACION_ESTRATEGIA_OPTIONS = [
-  {v:'email', l:'Email marketing (del afiliado)'},
-  {v:'compar', l:'Comparador de precios'},
-  {v:'cashback', l:'Cashback'},
-  {v:'cupon', l:'Cupón / código descuento'},
-  {v:'review', l:'Review / comparativa editorial'},
-  {v:'blog', l:'Contenido / blog'},
-  {v:'retarget', l:'Retargeting (del afiliado)'},
-  {v:'display', l:'Display (del afiliado)'},
-  {v:'social', l:'Redes sociales (del afiliado)'},
-  {v:'deals', l:'Deal site / chollos'},
-  {v:OTRO, l:'+ Otra estrategia'},
+  {v:'emagister', l:'Emagister'},
+  {v:'antevenio', l:'Antevenio'},
+  {v:'astaral', l:'Astaral'},
+  {v:'arkeero', l:'Arkeero'},
+  {v:'leadsformacion', l:'Leadsformacion'},
+  {v:'dolead', l:'Dolead'},
+  {v:'eretail', l:'Eretail'},
+  {v:OTRO, l:'+ Otro proveedor'},
 ];
 
 const CCAA = [
